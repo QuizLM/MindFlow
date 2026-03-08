@@ -142,6 +142,7 @@ export const QuizReview: React.FC<QuizReviewProps> = ({
     <div className="max-w-4xl mx-auto animate-fade-in">
       
       {/* Header & Controls */}
+      {!isFullScreen && (
       <div className={cn("bg-white rounded-2xl shadow-sm border border-gray-200 p-4 mb-6 sticky top-0 z-50 transition-all duration-300", !isHeaderVisible && "-translate-y-full opacity-0 pointer-events-none")}>
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3 w-full md:w-auto">
@@ -186,6 +187,8 @@ export const QuizReview: React.FC<QuizReviewProps> = ({
             </div>
         </div>
       </div>
+
+      )}
 
       {/* Navigation Panel for Review Mode */}
       <QuizNavigationPanel
