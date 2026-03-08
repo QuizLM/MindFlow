@@ -105,9 +105,9 @@ export const db = {
      * @returns {Promise<SavedQuiz[]>} A promise that resolves to an array of saved quizzes.
      */
     getQuizzes: async (): Promise<SavedQuiz[]> => {
-        const db = await openDB();
+        const dbInstance = await openDB();
         return new Promise((resolve, reject) => {
-            const transaction = db.transaction(STORE_NAME, 'readonly');
+            const transaction = dbInstance.transaction(STORE_NAME, 'readonly');
             const store = transaction.objectStore(STORE_NAME);
             const request = store.getAll();
 
@@ -123,9 +123,9 @@ export const db = {
      * @returns {Promise<SavedQuiz | undefined>} A promise that resolves to the quiz object if found, or undefined.
      */
     getQuiz: async (id: string): Promise<SavedQuiz | undefined> => {
-        const db = await openDB();
+        const dbInstance = await openDB();
         return new Promise((resolve, reject) => {
-            const transaction = db.transaction(STORE_NAME, 'readonly');
+            const transaction = dbInstance.transaction(STORE_NAME, 'readonly');
             const store = transaction.objectStore(STORE_NAME);
             const request = store.get(id);
 
@@ -163,9 +163,9 @@ export const db = {
      * @returns {Promise<void>} A promise that resolves when the update is complete.
      */
     updateQuizProgress: async (id: string, state: QuizState): Promise<void> => {
-        const db = await openDB();
+        const dbInstance = await openDB();
         return new Promise((resolve, reject) => {
-            const transaction = db.transaction(STORE_NAME, 'readwrite');
+            const transaction = dbInstance.transaction(STORE_NAME, 'readwrite');
             const store = transaction.objectStore(STORE_NAME);
 
             // First get the quiz
@@ -199,9 +199,9 @@ export const db = {
      * @returns {Promise<void>} A promise that resolves when the name is updated.
      */
     updateQuizName: async (id: string, name: string): Promise<void> => {
-        const db = await openDB();
+        const dbInstance = await openDB();
         return new Promise((resolve, reject) => {
-            const transaction = db.transaction(STORE_NAME, 'readwrite');
+            const transaction = dbInstance.transaction(STORE_NAME, 'readwrite');
             const store = transaction.objectStore(STORE_NAME);
 
             const getRequest = store.get(id);
@@ -265,9 +265,9 @@ export const db = {
      * @returns {Promise<void>}
      */
     clearQuizHistory: async (): Promise<void> => {
-        const db = await openDB();
+        const dbInstance = await openDB();
         return new Promise((resolve, reject) => {
-            const transaction = db.transaction(HISTORY_STORE_NAME, 'readwrite');
+            const transaction = dbInstance.transaction(HISTORY_STORE_NAME, 'readwrite');
             const store = transaction.objectStore(HISTORY_STORE_NAME);
             const request = store.clear();
 
@@ -277,9 +277,9 @@ export const db = {
     },
 
     getQuizHistory: async (): Promise<QuizHistoryRecord[]> => {
-        const db = await openDB();
+        const dbInstance = await openDB();
         return new Promise((resolve, reject) => {
-            const transaction = db.transaction(HISTORY_STORE_NAME, 'readonly');
+            const transaction = dbInstance.transaction(HISTORY_STORE_NAME, 'readonly');
             const store = transaction.objectStore(HISTORY_STORE_NAME);
             const request = store.getAll();
 
@@ -349,9 +349,9 @@ export const db = {
      * @returns {Promise<void>}
      */
     clearBookmarks: async (): Promise<void> => {
-        const db = await openDB();
+        const dbInstance = await openDB();
         return new Promise((resolve, reject) => {
-            const transaction = db.transaction(BOOKMARKS_STORE_NAME, 'readwrite');
+            const transaction = dbInstance.transaction(BOOKMARKS_STORE_NAME, 'readwrite');
             const store = transaction.objectStore(BOOKMARKS_STORE_NAME);
             const request = store.clear();
 
@@ -361,9 +361,9 @@ export const db = {
     },
 
     getAllBookmarks: async (): Promise<Question[]> => {
-        const db = await openDB();
+        const dbInstance = await openDB();
         return new Promise((resolve, reject) => {
-            const transaction = db.transaction(BOOKMARKS_STORE_NAME, 'readonly');
+            const transaction = dbInstance.transaction(BOOKMARKS_STORE_NAME, 'readonly');
             const store = transaction.objectStore(BOOKMARKS_STORE_NAME);
             const request = store.getAll();
 
