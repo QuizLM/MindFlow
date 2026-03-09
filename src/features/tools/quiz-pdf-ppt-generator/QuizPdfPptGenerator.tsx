@@ -1,0 +1,456 @@
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  ArrowLeft,
+  Layers,
+  Settings,
+  FileText,
+  Tag,
+  RotateCcw,
+  Loader2,
+  AlertCircle,
+  Database,
+  Presentation,
+  Save
+} from 'lucide-react';
+import { Button } from '../../../components/Button/Button';
+import { fetchQuestionMetadata, fetchQuestionsByIds } from '../../quiz/services/questionService';
+import { Question, InitialFilters } from '../../quiz/types';
+import { cn } from '../../../utils/cn';
+import { useDependentFilters } from '../../../hooks/useDependentFilters';
+import { useFilterCounts } from '../../../hooks/useFilterCounts';
+
+// UI Components
+import { FilterGroup } from '../../quiz/components/ui/FilterGroup';
+import { MultiSelectDropdown } from '../../quiz/components/ui/MultiSelectDropdown';
+import { SegmentedControl } from '../../quiz/components/ui/SegmentedControl';
+import { ActiveFiltersBar } from '../../quiz/components/ui/ActiveFiltersBar';
+import { GeneratorModal } from './components/GeneratorModal';
+import { generatePDF } from './utils/pdfGenerator';
+import { generatePowerPoint } from './utils/pptGenerator';
+
+const emptyFilters: InitialFilters = {
+  subject: [],
+  topic: [],
+  subTopic: [],
+  difficulty: [],
+  questionType: [],
+  examName: [],
+  examYear: [],
+  examDateShift: [],
+  tags: [],
+};
+
+export const QuizPdfPptGenerator: React.FC = () => {
+  const navigate = useNavigate();
+  const [filters, setFilters] = useState<InitialFilters>(emptyFilters);
+
+  // State for Data Fetching & Sync
+  const [metadata, setMetadata] = useState<Question[]>([]);
+  const [isLoadingMetadata, setIsLoadingMetadata] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState({ current: 0, total: 0 });
+  const [showEmptyError, setShowEmptyError] = useState(false);
+
+  // State for Generation
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [genType, setGenType] = useState<'PDF' | 'PPT' | null>(null);
+  const [genProgress, setGenProgress] = useState(0);
+  const [genDetails, setGenDetails] = useState('');
+
+  // 0. Fetch Metadata on Mount
+  const loadMetadata = useCallback(async () => {
+    try {
+      setIsLoadingMetadata(true);
+      setError(null);
+      setProgress({ current: 0, total: 0 });
+
+      const data = await fetchQuestionMetadata((current, total) => {
+        setProgress({ current, total });
+      });
+
+      setMetadata(data);
+    } catch (err) {
+      console.error("Failed to load questions:", err);
+      setError("Failed to load question bank. Please check your internet connection.");
+    } finally {
+      setIsLoadingMetadata(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadMetadata();
+  }, [loadMetadata]);
+
+  // 1. Build Classification Map
+  const classificationMap = useMemo(() => {
+    const map = new Map<string, Map<string, Set<string>>>();
+    metadata.forEach(q => {
+      const { subject, topic, subTopic } = q.classification;
+      if (!map.has(subject)) map.set(subject, new Map());
+      const topicMap = map.get(subject)!;
+      if (!topicMap.has(topic)) topicMap.set(topic, new Set());
+      if (subTopic) topicMap.get(topic)!.add(subTopic);
+    });
+    return map;
+  }, [metadata]);
+
+  // 2. Hooks Integration for Filter Logic
+  const { availableTopics, availableSubTopics } = useDependentFilters({
+    selectedFilters: filters,
+    setSelectedFilters: setFilters,
+    classificationMap
+  });
+
+  // Calculate dynamic counts for all filter options based on current selection
+  const filterCounts = useFilterCounts({
+    allQuestions: metadata,
+    selectedFilters: filters
+  });
+
+  // 3. Derived Lists for Dropdown Options
+  const allSubjects = useMemo(() => Array.from(classificationMap.keys()).sort(), [classificationMap]);
+  const allExamNames = useMemo(() => Array.from(new Set(metadata.map(q => q.sourceInfo.examName))).sort(), [metadata]);
+  const allExamYears = useMemo(() => Array.from(new Set(metadata.map(q => String(q.sourceInfo.examYear)))).sort(), [metadata]);
+  const allExamShifts = useMemo(() => Array.from(new Set(metadata.map(q => q.sourceInfo.examDateShift || ''))).filter(Boolean).sort(), [metadata]);
+  const allTags = useMemo(() => Array.from(new Set(metadata.flatMap(q => q.tags))).sort(), [metadata]);
+
+  // 4. Final Filtered Metadata Calculation
+  const filteredMetadata = useMemo(() => {
+    return metadata.filter(q => {
+      if (filters.subject.length > 0 && !filters.subject.includes(q.classification.subject)) return false;
+      if (filters.topic.length > 0 && !filters.topic.includes(q.classification.topic)) return false;
+      if (filters.subTopic.length > 0 && !filters.subTopic.includes(q.classification.subTopic || '')) return false;
+      if (filters.difficulty.length > 0 && !filters.difficulty.includes(q.properties.difficulty)) return false;
+      if (filters.questionType.length > 0 && !filters.questionType.includes(q.properties.questionType)) return false;
+      if (filters.examName.length > 0 && !filters.examName.includes(q.sourceInfo.examName)) return false;
+      if (filters.examYear.length > 0 && !filters.examYear.includes(String(q.sourceInfo.examYear))) return false;
+      if (filters.examDateShift.length > 0 && !filters.examDateShift.includes(q.sourceInfo.examDateShift || '')) return false;
+      if (filters.tags.length > 0 && !filters.tags.some(t => q.tags.includes(t))) return false;
+      return true;
+    });
+  }, [filters, metadata]);
+
+  useEffect(() => {
+    if (filteredMetadata.length > 0) {
+      setShowEmptyError(false);
+    }
+  }, [filteredMetadata.length]);
+
+  // --- Handlers ---
+
+  const handleFilterChange = (key: keyof InitialFilters, selected: string[]) => {
+    setFilters(prev => ({ ...prev, [key]: selected }));
+  };
+
+  const removeFilter = (key: keyof InitialFilters, value?: string) => {
+    if (value) {
+      setFilters(prev => ({ ...prev, [key]: prev[key].filter(item => item !== value) }));
+    } else {
+      setFilters(prev => ({ ...prev, [key]: [] }));
+    }
+  };
+
+  const handleSegmentToggle = (key: keyof InitialFilters, option: string) => {
+    setFilters(prev => {
+      const current = prev[key];
+      const isSelected = current.includes(option);
+      return {
+        ...prev,
+        [key]: isSelected ? current.filter(i => i !== option) : [...current, option]
+      };
+    });
+  };
+
+  const validateAndFetchQuestions = async () => {
+    if (filteredMetadata.length === 0) {
+      setShowEmptyError(true);
+      setTimeout(() => setShowEmptyError(false), 4000);
+      return null;
+    }
+
+    try {
+        const ids = filteredMetadata.map(q => q.id);
+        const fullQuestions = await fetchQuestionsByIds(ids);
+        return fullQuestions;
+    } catch (err) {
+        console.error("Failed to fetch full questions:", err);
+        alert("Failed to fetch full questions. Please check connection.");
+        return null;
+    }
+  };
+
+  const handleCreatePDF = async () => {
+    setGenType('PDF');
+    setIsGenerating(true);
+    setGenProgress(0);
+    setGenDetails('Fetching full questions data...');
+
+    const questions = await validateAndFetchQuestions();
+
+    if (questions) {
+      try {
+        await generatePDF(questions, filters, (progress, details) => {
+           setGenProgress(progress);
+           setGenDetails(details);
+        });
+      } catch (err) {
+         console.error(err);
+         alert("Error generating PDF.");
+      }
+    }
+    setIsGenerating(false);
+    setGenType(null);
+  };
+
+  const handleCreatePPT = async () => {
+    setGenType('PPT');
+    setIsGenerating(true);
+    setGenProgress(0);
+    setGenDetails('Fetching full questions data...');
+
+    const questions = await validateAndFetchQuestions();
+
+    if (questions) {
+       try {
+         await generatePowerPoint(questions, filters, (progress, details) => {
+            setGenProgress(progress);
+            setGenDetails(details);
+         });
+       } catch (err) {
+         console.error(err);
+         alert("Error generating PPT.");
+       }
+    }
+    setIsGenerating(false);
+    setGenType(null);
+  };
+
+
+  // --- Loading State Render ---
+  if (isLoadingMetadata) {
+    const percentage = progress.total > 0 ? Math.round((progress.current / progress.total) * 100) : 0;
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center space-y-6 bg-gray-50/50 p-8">
+        <div className="relative">
+          <div className="p-4 bg-indigo-50 rounded-full">
+            <Database className="w-8 h-8 text-indigo-600 animate-pulse" />
+          </div>
+          <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1">
+            <Loader2 className="w-4 h-4 text-indigo-600 animate-spin" />
+          </div>
+        </div>
+        <div className="text-center space-y-2 max-w-xs w-full">
+          <h2 className="text-xl font-bold text-gray-800">Syncing Question Bank</h2>
+          <p className="text-gray-500 text-sm">
+            {progress.total > 0
+              ? `Indexed ${progress.current.toLocaleString()} of ${progress.total.toLocaleString()} items`
+              : 'Connecting to Database...'}
+          </p>
+          <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden mt-4">
+            <div className="h-full bg-indigo-600 transition-all duration-500 ease-out rounded-full" style={{ width: `${percentage}%` }} />
+          </div>
+          <p className="text-xs text-gray-400 font-medium text-right mt-1">{percentage}%</p>
+        </div>
+      </div>
+    );
+  }
+
+  // --- Error State Render ---
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center space-y-4 bg-gray-50/50 p-8 text-center animate-fade-in">
+        <div className="p-4 bg-red-50 rounded-full">
+          <AlertCircle className="w-10 h-10 text-red-500" />
+        </div>
+        <h2 className="text-xl font-bold text-gray-800">Connection Error</h2>
+        <p className="text-gray-500 max-w-md">{error}</p>
+        <div className="flex gap-4 mt-4">
+          <Button variant="outline" onClick={() => navigate('/tools')}>Go Back</Button>
+          <Button onClick={loadMetadata}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gray-50/50 min-h-screen flex flex-col">
+       <GeneratorModal
+          isOpen={isGenerating}
+          type={genType}
+          progress={genProgress}
+          details={genDetails}
+       />
+
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-4 sticky top-0 z-10 shadow-sm">
+        <button
+            onClick={() => navigate('/tools')}
+            className="p-2 hover:bg-gray-100 rounded-xl text-gray-600 transition-colors"
+        >
+            <ArrowLeft className="w-6 h-6" />
+        </button>
+        <div>
+            <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
+                GK PDF/PPT Generator
+            </h1>
+            <p className="text-gray-500 text-sm font-medium">Select questions to generate PDF worksheets or PPT presentations.</p>
+        </div>
+      </div>
+
+      {/* Scrollable Config Content */}
+      <div className="p-6 md:p-10 space-y-6 max-w-7xl mx-auto w-full flex-1 overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+            <div className="text-sm md:text-base text-gray-500 font-medium">
+                Question Bank Size: <span className="font-bold text-indigo-600">{metadata.length.toLocaleString()}</span>
+            </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Column 1: Classification */}
+          <FilterGroup title="Classification" icon={<Layers className="w-5 h-5" />}>
+            <MultiSelectDropdown
+              label="Subject"
+              tooltip="Filter questions by broad academic discipline"
+              options={allSubjects}
+              selectedOptions={filters.subject}
+              onSelectionChange={(sel) => handleFilterChange('subject', sel)}
+              placeholder="Select Subjects"
+              counts={filterCounts.subject}
+            />
+            <MultiSelectDropdown
+              label="Topic"
+              tooltip="Filter by specific topics within the selected subjects"
+              options={availableTopics}
+              selectedOptions={filters.topic}
+              onSelectionChange={(sel) => handleFilterChange('topic', sel)}
+              placeholder={availableTopics.length > 0 ? "Select Topics" : "Select Subject First"}
+              disabled={availableTopics.length === 0}
+              counts={filterCounts.topic}
+            />
+            <MultiSelectDropdown
+              label="Sub-Topic"
+              tooltip="Filter by granular sub-topics for precise practice"
+              options={availableSubTopics}
+              selectedOptions={filters.subTopic}
+              onSelectionChange={(sel) => handleFilterChange('subTopic', sel)}
+              placeholder={availableSubTopics.length > 0 ? "Select Sub-Topics" : "Select Topic First"}
+              disabled={availableSubTopics.length === 0}
+              counts={filterCounts.subTopic}
+            />
+          </FilterGroup>
+
+          {/* Column 2: Properties */}
+          <FilterGroup title="Properties" icon={<Settings className="w-5 h-5" />}>
+            <SegmentedControl
+              label="Difficulty"
+              tooltip="Choose question complexity level"
+              options={['Easy', 'Medium', 'Hard']}
+              selectedOptions={filters.difficulty}
+              onOptionToggle={(opt) => handleSegmentToggle('difficulty', opt)}
+              counts={filterCounts.difficulty}
+            />
+            <SegmentedControl
+              label="Question Type"
+              tooltip="Filter by question format (e.g., Multiple Choice)"
+              options={['MCQ']}
+              selectedOptions={filters.questionType}
+              onOptionToggle={(opt) => handleSegmentToggle('questionType', opt)}
+              counts={filterCounts.questionType}
+            />
+          </FilterGroup>
+
+          {/* Column 3: Source */}
+          <FilterGroup title="Source" icon={<FileText className="w-5 h-5" />}>
+            <MultiSelectDropdown
+              label="Exam Name"
+              tooltip="Filter by specific competitive exam source"
+              options={allExamNames}
+              selectedOptions={filters.examName}
+              onSelectionChange={(sel) => handleFilterChange('examName', sel)}
+              placeholder="Select Exams"
+              counts={filterCounts.examName}
+            />
+            <MultiSelectDropdown
+              label="Exam Year"
+              tooltip="Filter questions by the year they appeared"
+              options={allExamYears}
+              selectedOptions={filters.examYear}
+              onSelectionChange={(sel) => handleFilterChange('examYear', sel)}
+              placeholder="Select Years"
+              counts={filterCounts.examYear}
+            />
+            <MultiSelectDropdown
+              label="Exam Shift"
+              tooltip="Filter by specific exam date or shift"
+              options={allExamShifts}
+              selectedOptions={filters.examDateShift}
+              onSelectionChange={(sel) => handleFilterChange('examDateShift', sel)}
+              placeholder="Select Shifts"
+              counts={filterCounts.examDateShift}
+            />
+          </FilterGroup>
+
+          {/* Column 4: Tags */}
+          <FilterGroup title="Tags" icon={<Tag className="w-5 h-5" />}>
+            <MultiSelectDropdown
+              label="Search Tags"
+              tooltip="Filter using specific keywords or concepts"
+              options={allTags}
+              selectedOptions={filters.tags}
+              onSelectionChange={(sel) => handleFilterChange('tags', sel)}
+              placeholder="Filter by Tags"
+              counts={filterCounts.tags}
+            />
+          </FilterGroup>
+        </div>
+
+        {/* Active Filters Component */}
+        <ActiveFiltersBar
+          filters={filters}
+          onRemoveFilter={removeFilter}
+        />
+      </div>
+
+      {/* Footer */}
+      <div className="border-t border-gray-200 bg-white p-6 sticky bottom-0 z-10">
+        <div className="max-w-7xl mx-auto w-full flex flex-col gap-4">
+          <div className="flex flex-col-reverse sm:flex-row justify-between items-center gap-4">
+            <Button variant="outline" onClick={() => setFilters(emptyFilters)} className="flex items-center gap-2 w-full sm:w-auto">
+              <RotateCcw className="w-4 h-4" /> Reset Filters
+            </Button>
+
+            <div className="relative w-full sm:w-auto flex flex-col sm:flex-row gap-3">
+              {showEmptyError && (
+                <div className="absolute bottom-full mb-3 right-0 sm:left-auto sm:right-0 w-full sm:w-64 bg-red-50 text-red-600 text-xs font-semibold px-3 py-2 rounded-lg shadow-sm border border-red-100 animate-in fade-in slide-in-from-bottom-2 text-center sm:text-right z-10">
+                  No questions match your criteria. <br /> Please adjust filters.
+                  <div className="absolute top-full right-8 sm:right-12 border-4 border-transparent border-t-red-100"></div>
+                </div>
+              )}
+
+              <Button
+                size="lg"
+                onClick={handleCreatePDF}
+                disabled={isGenerating}
+                className="bg-red-600 hover:bg-red-700 text-white border-0 shadow-lg shadow-red-200 hover:shadow-xl hover:shadow-red-300 w-full sm:w-auto px-8 py-3 text-base flex items-center justify-center gap-2"
+              >
+                <FileText className="w-5 h-5" />
+                Create PDF ({filteredMetadata.length})
+              </Button>
+
+              <Button
+                size="lg"
+                onClick={handleCreatePPT}
+                disabled={isGenerating}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white border-0 shadow-lg shadow-indigo-200 hover:shadow-xl hover:shadow-indigo-300 w-full sm:w-auto px-8 py-3 text-base flex items-center justify-center gap-2"
+              >
+                <Presentation className="w-5 h-5" />
+                Create PPT ({filteredMetadata.length})
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
