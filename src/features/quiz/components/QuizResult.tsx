@@ -148,7 +148,7 @@ export const QuizResult: React.FC<QuizResultProps> = ({
       
       {/* Top Controls */}
       <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="text-gray-500 hover:text-gray-900">
+          <Button variant="ghost" onClick={() => navigate('/quiz/attempted')} className="text-gray-600 hover:bg-gray-100 pl-0 hover:text-gray-900">
               <ArrowLeft className="w-4 h-4 mr-2" /> Back
           </Button>
       </div>
