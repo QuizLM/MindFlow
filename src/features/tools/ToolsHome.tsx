@@ -29,13 +29,13 @@ const ToolsHome: React.FC = () => {
         },
         {
             id: 'ppt-generator',
-            title: 'PPT Generator',
-            description: 'Create presentation slides for classroom teaching.',
+            title: 'GK PDF/PPT Generator',
+            description: 'Create customized PDF worksheets and PPT slides for GK Questions.',
             icon: <Presentation className="w-6 h-6 text-gray-400" />,
             color: 'bg-gray-50',
             borderColor: 'hover:border-gray-300',
-            action: () => {},
-            disabled: true
+            action: () => navigate('/tools/quiz-pdf-ppt-generator'),
+            disabled: false
         }
     ];
 
