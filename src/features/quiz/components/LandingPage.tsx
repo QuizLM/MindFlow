@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { SettingsContext } from '../../../context/SettingsContext';
 import { ArrowRight, Brain, Zap, Layers, Star, Play, Github, Download, Target, User as UserIcon, LogOut, ChevronDown, Moon, Sun } from 'lucide-react';
+import { ClaymorphismSwitch } from './ui/ClaymorphismSwitch';
 import { Button } from '../../../components/Button/Button';
 import { Typewriter } from './Landing/Typewriter';
 import { DemoCard } from './Landing/DemoCard';
@@ -114,13 +115,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLoginC
               </a>
               
 
-              <button
-                onClick={toggleDarkMode}
-                className="p-2 rounded-full text-slate-600 dark:text-slate-400 dark:text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-800 transition-colors mr-2"
-                aria-label="Toggle Dark Mode"
-              >
-                {isDarkMode ? <Sun className="w-5 h-5 text-amber-500" /> : <Moon className="w-5 h-5" />}
-              </button>
+              <div className="mr-2 flex-shrink-0 flex items-center justify-center">
+                <ClaymorphismSwitch checked={isDarkMode} onChange={toggleDarkMode} />
+              </div>
 
               {user ? (
                 <div className="relative">
