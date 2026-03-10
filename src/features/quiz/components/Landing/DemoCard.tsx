@@ -178,7 +178,7 @@ export const DemoCard: React.FC = () => {
       }}
     >
       {/* Inner Content Container with Glass Background */}
-      <div className="relative w-full h-full bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl rounded-[2rem] p-6 md:p-8 overflow-hidden flex flex-col border border-white/20 dark:border-slate-800/50">
+      <div className="relative w-full h-full bg-white dark:bg-gray-800/40 dark:bg-slate-900/40 backdrop-blur-xl rounded-[2rem] p-6 md:p-8 overflow-hidden flex flex-col border border-white/20 dark:border-slate-800/50">
         
         {/* Glossy Shine Effect (Static Base) */}
         <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-tr from-white/40 to-transparent pointer-events-none z-0" />
@@ -232,9 +232,9 @@ export const DemoCard: React.FC = () => {
               <div className="h-5 md:h-6 w-3/4 bg-slate-400/20 rounded-lg" />
               <div className="h-3 md:h-4 w-1/2 bg-slate-400/10 rounded-lg mb-6 md:mb-8" />
               <div className="space-y-2.5 md:space-y-3">
-                <div className="h-9 md:h-10 w-full bg-white/50 rounded-xl border border-white/60" />
-                <div className="h-9 md:h-10 w-full bg-white/50 rounded-xl border border-white/60" />
-                <div className="h-9 md:h-10 w-full bg-white/50 rounded-xl border border-white/60" />
+                <div className="h-9 md:h-10 w-full bg-white dark:bg-gray-800/50 rounded-xl border border-white/60" />
+                <div className="h-9 md:h-10 w-full bg-white dark:bg-gray-800/50 rounded-xl border border-white/60" />
+                <div className="h-9 md:h-10 w-full bg-white dark:bg-gray-800/50 rounded-xl border border-white/60" />
               </div>
             </div>
           )}
@@ -257,7 +257,7 @@ export const DemoCard: React.FC = () => {
                   p-3 rounded-xl border flex items-center gap-3 transition-all duration-300
                   ${(phase === 'SELECT_OPTION' || phase === 'CLICK_SUBMIT') 
                       ? `${currentContent.theme.selectedBg} ${currentContent.theme.selectedBorder} shadow-sm` 
-                      : 'bg-white/40 dark:bg-slate-800/40 border-white/60 dark:border-slate-700/50'}
+                      : 'bg-white dark:bg-gray-800/40 dark:bg-slate-800/40 border-white/60 dark:border-slate-700/50'}
                 `}>
                   <div className={`
                     w-4 h-4 md:w-5 md:h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors duration-300
@@ -269,13 +269,13 @@ export const DemoCard: React.FC = () => {
                 </div>
 
                 {/* Option 2 */}
-                <div className="p-3 rounded-xl border border-white/60 dark:border-slate-700/50 bg-white/40 dark:bg-slate-800/40 flex items-center gap-3 opacity-60">
+                <div className="p-3 rounded-xl border border-white/60 dark:border-slate-700/50 bg-white dark:bg-gray-800/40 dark:bg-slate-800/40 flex items-center gap-3 opacity-60">
                   <div className="w-4 h-4 md:w-5 md:h-5 rounded-full border-2 border-slate-300 dark:border-slate-600 flex-shrink-0" />
                   <div className="text-xs font-medium text-slate-600 dark:text-slate-400">{currentContent.options[1]}</div>
                 </div>
 
                 {/* Option 3 */}
-                <div className="p-3 rounded-xl border border-white/60 dark:border-slate-700/50 bg-white/40 dark:bg-slate-800/40 flex items-center gap-3 opacity-60">
+                <div className="p-3 rounded-xl border border-white/60 dark:border-slate-700/50 bg-white dark:bg-gray-800/40 dark:bg-slate-800/40 flex items-center gap-3 opacity-60">
                   <div className="w-4 h-4 md:w-5 md:h-5 rounded-full border-2 border-slate-300 dark:border-slate-600 flex-shrink-0" />
                   <div className="text-xs font-medium text-slate-600 dark:text-slate-400">{currentContent.options[2]}</div>
                 </div>

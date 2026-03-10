@@ -36,7 +36,7 @@ export const Flashcard: React.FC<FlashcardProps> = ({ idiom, serialNumber, isFli
         )}
       >
         {/* --- FRONT FACE --- */}
-        <div className="absolute inset-0 w-full h-full backface-hidden rounded-3xl overflow-hidden bg-white border border-gray-200 shadow-sm flex flex-col">
+        <div className="absolute inset-0 w-full h-full backface-hidden rounded-3xl overflow-hidden bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 dark:border-gray-700 shadow-sm flex flex-col">
 
           {/* Header Decoration */}
           <div className="h-2 w-full bg-gradient-to-r from-amber-400 to-orange-500"></div>
@@ -49,7 +49,7 @@ export const Flashcard: React.FC<FlashcardProps> = ({ idiom, serialNumber, isFli
               <Quote className="w-8 h-8 fill-current" />
             </div>
 
-            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 leading-tight drop-shadow-sm font-serif">
+            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white dark:text-white leading-tight drop-shadow-sm font-serif">
               {idiom.content.phrase}
             </h2>
 
@@ -59,15 +59,15 @@ export const Flashcard: React.FC<FlashcardProps> = ({ idiom, serialNumber, isFli
           </div>
 
           {/* Footer Tags */}
-          <div className="p-4 bg-white border-t border-gray-100 flex justify-between items-center text-xs text-gray-500">
-            <span className="bg-gray-100 px-2 py-1 rounded-md">{idiom.properties.difficulty}</span>
+          <div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-800 dark:border-gray-800 flex justify-between items-center text-xs text-gray-500 dark:text-gray-400 dark:text-gray-400">
+            <span className="bg-gray-100 dark:bg-gray-800 dark:bg-gray-800 px-2 py-1 rounded-md">{idiom.properties.difficulty}</span>
             <span>#{serialNumber}</span>
             <span>{idiom.sourceInfo.pdfName} | {idiom.sourceInfo.examYear}</span>
           </div>
         </div>
 
         {/* --- BACK FACE --- */}
-        <div className="absolute inset-0 w-full h-full backface-hidden rotate-y-180 rounded-3xl overflow-hidden bg-white border border-gray-200 shadow-sm flex flex-col">
+        <div className="absolute inset-0 w-full h-full backface-hidden rotate-y-180 rounded-3xl overflow-hidden bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 dark:border-gray-700 shadow-sm flex flex-col">
           {/* Header */}
           <div className="bg-amber-50 p-4 border-b border-amber-100 flex justify-between items-center">
             <h3 className="font-bold text-amber-900 truncate max-w-[80%] font-serif text-lg">{idiom.content.phrase}</h3>
@@ -81,18 +81,18 @@ export const Flashcard: React.FC<FlashcardProps> = ({ idiom, serialNumber, isFli
 
             {/* Meanings */}
             <div className="space-y-3">
-              <div className="bg-white p-4 rounded-xl border-l-4 border-amber-500 shadow-sm ring-1 ring-gray-100">
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border-l-4 border-amber-500 shadow-sm ring-1 ring-gray-100">
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Meaning (English)</p>
-                <p className="text-gray-800 font-medium leading-relaxed text-lg">{idiom.content.meanings.english}</p>
+                <p className="text-gray-800 dark:text-gray-100 dark:text-gray-100 font-medium leading-relaxed text-lg">{idiom.content.meanings.english}</p>
               </div>
-              <div className="bg-white p-4 rounded-xl border-l-4 border-orange-400 shadow-sm ring-1 ring-gray-100">
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border-l-4 border-orange-400 shadow-sm ring-1 ring-gray-100">
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Meaning (Hindi)</p>
-                <p className="text-gray-800 font-hindi font-medium text-lg">{idiom.content.meanings.hindi}</p>
+                <p className="text-gray-800 dark:text-gray-100 dark:text-gray-100 font-hindi font-medium text-lg">{idiom.content.meanings.hindi}</p>
               </div>
             </div>
 
             {/* Usage */}
-            <div className="relative pl-4 italic text-gray-600 text-sm md:text-base leading-relaxed">
+            <div className="relative pl-4 italic text-gray-600 dark:text-gray-300 dark:text-gray-300 text-sm md:text-base leading-relaxed">
               <span className="absolute top-0 left-0 text-4xl text-gray-200 font-serif">"</span>
               {idiom.content.usage}
             </div>

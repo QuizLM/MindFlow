@@ -96,7 +96,7 @@ export interface SettingsContextType {
   /** Whether Dark Mode is enabled. */
   isDarkMode: boolean;
   /** Toggles Dark Mode on/off. */
-  toggleDarkMode: () => void;
+  toggleDarkMode: (event?: React.MouseEvent | React.TouchEvent | Event) => void;
   /** Whether Sound Effects are enabled. */
   isSoundEnabled: boolean;
   /** Toggles Sound Effects on/off. */

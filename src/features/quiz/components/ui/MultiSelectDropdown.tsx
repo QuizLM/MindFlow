@@ -97,7 +97,7 @@ export function MultiSelectDropdown({
     <div className="relative" ref={dropdownRef}>
       {label && (
         <div className="flex items-center gap-1.5 mb-1.5">
-          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</label>
+          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 dark:text-gray-400 uppercase tracking-wider">{label}</label>
           {tooltip && (
             <div className="group relative flex items-center">
               <Info className="w-3.5 h-3.5 text-gray-400 cursor-help hover:text-indigo-500 transition-colors" />
@@ -114,12 +114,12 @@ export function MultiSelectDropdown({
         onClick={() => !disabled && setIsOpen(!isOpen)} 
         disabled={disabled}
         className={cn(
-            "w-full flex items-center justify-between p-3 bg-white border rounded-lg text-sm transition-all",
-            disabled ? "bg-gray-50 text-gray-400 cursor-not-allowed border-gray-200" : "hover:border-indigo-300 focus:ring-2 focus:ring-indigo-100 cursor-pointer border-gray-300",
+            "w-full flex items-center justify-between p-3 bg-white dark:bg-gray-800 border rounded-lg text-sm transition-all",
+            disabled ? "bg-gray-50 dark:bg-gray-900 dark:bg-gray-900 text-gray-400 cursor-not-allowed border-gray-200 dark:border-gray-700 dark:border-gray-700" : "hover:border-indigo-300 focus:ring-2 focus:ring-indigo-100 cursor-pointer border-gray-300 dark:border-gray-600 dark:border-gray-600",
             isOpen ? "border-indigo-500 ring-2 ring-indigo-100" : ""
         )}
       >
-        <span className={cn("truncate", selectedOptions.length === 0 ? "text-gray-400" : "text-gray-900 font-medium")}>
+        <span className={cn("truncate", selectedOptions.length === 0 ? "text-gray-400" : "text-gray-900 dark:text-white dark:text-white font-medium")}>
             {getDisplayText()}
         </span>
         
@@ -127,7 +127,7 @@ export function MultiSelectDropdown({
             {selectedOptions.length > 0 && !disabled && (
                 <div 
                     onClick={clearSelection}
-                    className="p-0.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 mr-1 transition-colors"
+                    className="p-0.5 rounded-full hover:bg-gray-100 dark:bg-gray-800 text-gray-400 hover:text-gray-600 dark:text-gray-300 mr-1 transition-colors"
                 >
                     <X className="w-3.5 h-3.5" />
                 </div>
@@ -137,9 +137,9 @@ export function MultiSelectDropdown({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-2 bg-white rounded-lg shadow-xl border border-gray-100 overflow-hidden animate-in fade-in zoom-in-95 duration-100 flex flex-col max-h-80">
+        <div className="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-100 dark:border-gray-800 dark:border-gray-800 overflow-hidden animate-in fade-in zoom-in-95 duration-100 flex flex-col max-h-80">
           {/* Search Bar */}
-          <div className="p-2 border-b border-gray-100 bg-gray-50 sticky top-0 z-10">
+          <div className="p-2 border-b border-gray-100 dark:border-gray-800 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 dark:bg-gray-900 sticky top-0 z-10">
               <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                   <input 
@@ -148,7 +148,7 @@ export function MultiSelectDropdown({
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       placeholder="Search..."
-                      className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200 bg-white placeholder:text-gray-400"
+                      className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 dark:border-gray-700 dark:border-gray-700 rounded-md focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200 bg-white dark:bg-gray-800 placeholder:text-gray-400"
                       onClick={(e) => e.stopPropagation()}
                   />
               </div>
@@ -175,15 +175,15 @@ export function MultiSelectDropdown({
                             disabled={isOptionDisabled}
                             className={cn(
                                 "w-full flex items-center justify-between px-3 py-2.5 text-sm text-left transition-colors rounded-md",
-                                isSelected ? "bg-indigo-50 text-indigo-700" : "text-gray-700 hover:bg-gray-50",
+                                isSelected ? "bg-indigo-50 text-indigo-700" : "text-gray-700 dark:text-gray-200 dark:text-gray-200 hover:bg-gray-50 dark:bg-gray-900",
                                 isOptionDisabled && "opacity-50 cursor-not-allowed hover:bg-transparent"
                             )}
                         >
                             <div className="flex items-center gap-3 overflow-hidden">
                                 <div className={cn(
                                     "w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-all",
-                                    isSelected ? "bg-indigo-600 border-indigo-600" : "border-gray-300 bg-white",
-                                    isOptionDisabled && "bg-gray-100 border-gray-200"
+                                    isSelected ? "bg-indigo-600 border-indigo-600" : "border-gray-300 dark:border-gray-600 dark:border-gray-600 bg-white dark:bg-gray-800",
+                                    isOptionDisabled && "bg-gray-100 dark:bg-gray-800 dark:bg-gray-800 border-gray-200 dark:border-gray-700 dark:border-gray-700"
                                 )}>
                                     {isSelected && <Check className="w-3 h-3 text-white" />}
                                 </div>

@@ -141,7 +141,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
         )}
 
         {/* --- Personal Information Card --- */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-slate-200/80 shadow-sm p-6">
           <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-5">Personal Information</h2>
           <div className="space-y-4">
 
@@ -188,7 +188,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
         </div>
 
         {/* --- Security Settings Card --- */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-slate-200/80 shadow-sm p-6">
            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-5">Security Settings</h2>
 
            <div className="mb-8">
