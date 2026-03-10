@@ -136,18 +136,18 @@ const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
       <div className="min-h-screen flex items-center justify-center p-4 relative">
         <button
          onClick={onBack}
-         className="absolute top-8 left-8 z-20 flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors"
+         className="absolute top-8 left-8 z-20 flex items-center gap-2 text-sm font-semibold text-gray-500 dark:text-gray-400 dark:text-gray-400 hover:text-gray-800 dark:text-gray-100 transition-colors"
        >
          <ArrowLeft className="w-4 h-4" />
          Back to Home
        </button>
        <div className="w-full max-w-md">
-         <div className="bg-white/70 backdrop-blur-xl rounded-xl shadow-form p-8 md:p-10 border border-white/30">
+         <div className="bg-white dark:bg-gray-800/70 backdrop-blur-xl rounded-xl shadow-form p-8 md:p-10 border border-white/30">
            <div className="flex justify-center items-center gap-2 mb-8">
              <div className="bg-indigo-600 p-2 rounded-lg">
                <BrainCircuit className="h-6 w-6 text-white" />
              </div>
-             <span className="text-2xl font-black tracking-tight text-gray-900 dark:text-slate-100">MindFlow</span>
+             <span className="text-2xl font-black tracking-tight text-gray-900 dark:text-white dark:text-white dark:text-slate-100">MindFlow</span>
            </div>
            <div className="flex border-b border-border-color mb-8 text-center">
              <button onClick={() => setIsSignUp(false)} className={`w-1/2 pb-3 font-bold ${!isSignUp ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-text-secondary hover:text-text-main transition-colors'}`}>Sign In</button>
@@ -164,7 +164,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
                    value={fullName}
                    onChange={(e) => setFullName(e.target.value)}
                    placeholder="John Doe"
-                   className="block w-full px-4 py-3 bg-white border border-border-color rounded-lg text-text-main placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
+                   className="block w-full px-4 py-3 bg-white dark:bg-gray-800 border border-border-color rounded-lg text-text-main placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
                  />
                </div>
              )}
@@ -177,7 +177,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
                  value={email}
                  onChange={(e) => setEmail(e.target.value)}
                  placeholder="you@example.com"
-                 className="block w-full px-4 py-3 bg-white border border-border-color rounded-lg text-text-main placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
+                 className="block w-full px-4 py-3 bg-white dark:bg-gray-800 border border-border-color rounded-lg text-text-main placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
                />
              </div>
              <div>
@@ -193,7 +193,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
                    value={password}
                    onChange={(e) => setPassword(e.target.value)}
                    placeholder="••••••••"
-                   className="block w-full px-4 py-3 pr-10 bg-white border border-border-color rounded-lg text-text-main placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
+                   className="block w-full px-4 py-3 pr-10 bg-white dark:bg-gray-800 border border-border-color rounded-lg text-text-main placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
                  />
                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-text-secondary hover:text-text-main">
                    {showPassword ? (
@@ -214,7 +214,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
                    value={confirmPassword}
                    onChange={(e) => setConfirmPassword(e.target.value)}
                    placeholder="••••••••"
-                   className="block w-full px-4 py-3 bg-white border border-border-color rounded-lg text-text-main placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
+                   className="block w-full px-4 py-3 bg-white dark:bg-gray-800 border border-border-color rounded-lg text-text-main placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
                  />
                </div>
              )}
@@ -232,14 +232,14 @@ const AuthPage: React.FC<AuthPageProps> = ({ onBack }) => {
            </form>
            <div className="relative my-6">
              <div aria-hidden="true" className="absolute inset-0 flex items-center"><div className="w-full border-t border-border-color"></div></div>
-             <div className="relative flex justify-center text-sm"><span className="px-2 bg-white/0 text-text-secondary">Or</span></div>
+             <div className="relative flex justify-center text-sm"><span className="px-2 bg-white dark:bg-gray-800/0 text-text-secondary">Or</span></div>
            </div>
            <div>
              <button
                type="button"
                onClick={handleGoogleSignIn}
                disabled={loading}
-               className="w-full flex justify-center items-center gap-3 bg-white text-text-main font-semibold py-3 px-4 rounded-lg border border-border-color hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 focus:ring-offset-white transition-all duration-300 disabled:opacity-50"
+               className="w-full flex justify-center items-center gap-3 bg-white dark:bg-gray-800 text-text-main font-semibold py-3 px-4 rounded-lg border border-border-color hover:bg-gray-50 dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 focus:ring-offset-white transition-all duration-300 disabled:opacity-50"
              >
                {loading ? (
                  'Signing in...'

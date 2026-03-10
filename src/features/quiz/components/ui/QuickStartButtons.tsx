@@ -27,25 +27,25 @@ export const QuickStartButtons: React.FC<QuickStartButtonsProps> = ({ onQuickSta
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <button 
             onClick={() => onQuickStart('Easy')} 
-            className="bg-white hover:bg-indigo-50 border border-indigo-200 text-indigo-700 font-semibold py-3 rounded-lg text-sm transition-all shadow-sm hover:shadow hover:-translate-y-0.5"
+            className="bg-white dark:bg-gray-800 hover:bg-indigo-50 border border-indigo-200 text-indigo-700 font-semibold py-3 rounded-lg text-sm transition-all shadow-sm hover:shadow hover:-translate-y-0.5"
         >
             Quick 25 Easy
         </button>
         <button 
             onClick={() => onQuickStart('Medium')} 
-            className="bg-white hover:bg-indigo-50 border border-indigo-200 text-indigo-700 font-semibold py-3 rounded-lg text-sm transition-all shadow-sm hover:shadow hover:-translate-y-0.5"
+            className="bg-white dark:bg-gray-800 hover:bg-indigo-50 border border-indigo-200 text-indigo-700 font-semibold py-3 rounded-lg text-sm transition-all shadow-sm hover:shadow hover:-translate-y-0.5"
         >
             Quick 25 Moderate
         </button>
         <button 
             onClick={() => onQuickStart('Hard')} 
-            className="bg-white hover:bg-indigo-50 border border-indigo-200 text-indigo-700 font-semibold py-3 rounded-lg text-sm transition-all shadow-sm hover:shadow hover:-translate-y-0.5"
+            className="bg-white dark:bg-gray-800 hover:bg-indigo-50 border border-indigo-200 text-indigo-700 font-semibold py-3 rounded-lg text-sm transition-all shadow-sm hover:shadow hover:-translate-y-0.5"
         >
             Quick 25 Hard
         </button>
         <button 
             onClick={() => onQuickStart('Mix')} 
-            className="bg-white hover:bg-indigo-50 border border-indigo-200 text-indigo-700 font-semibold py-3 rounded-lg text-sm transition-all shadow-sm hover:shadow hover:-translate-y-0.5"
+            className="bg-white dark:bg-gray-800 hover:bg-indigo-50 border border-indigo-200 text-indigo-700 font-semibold py-3 rounded-lg text-sm transition-all shadow-sm hover:shadow hover:-translate-y-0.5"
         >
             Quick 25 Mix Level
         </button>

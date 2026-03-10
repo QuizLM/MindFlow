@@ -17,7 +17,7 @@ const SubscriptionPage: React.FC<SubscriptionPageProps> = ({ onBack }) => {
         </div>
 
         {/* Current Plan */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-lg p-8 relative overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-3xl border border-slate-200/80 shadow-lg p-8 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-bl-full -z-10"></div>
 
           <div className="flex items-start justify-between mb-8">
@@ -57,7 +57,7 @@ const SubscriptionPage: React.FC<SubscriptionPageProps> = ({ onBack }) => {
         </div>
 
         {/* Referral & Earn */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-8">
+        <div className="bg-white dark:bg-gray-800 rounded-3xl border border-slate-200/80 shadow-sm p-8">
           <div className="flex items-center gap-4 mb-6">
             <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-500 border border-emerald-100">
               <Gift className="w-6 h-6" />
@@ -71,7 +71,7 @@ const SubscriptionPage: React.FC<SubscriptionPageProps> = ({ onBack }) => {
           <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-center sm:text-left w-full sm:w-auto">
               <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-2">Your Invite Code</p>
-              <div className="px-6 py-3 bg-white border border-slate-200 rounded-xl inline-block shadow-inner">
+              <div className="px-6 py-3 bg-white dark:bg-gray-800 border border-slate-200 rounded-xl inline-block shadow-inner">
                  <p className="text-2xl font-black text-indigo-700 tracking-widest font-mono">FLOW24X</p>
               </div>
             </div>

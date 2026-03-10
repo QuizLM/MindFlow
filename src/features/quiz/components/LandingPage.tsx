@@ -96,7 +96,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLoginC
            {shouldShowInstallButton && (
               <button 
                 onClick={handleInstallClick}
-                className="flex items-center gap-2 px-3 py-2 md:px-4 rounded-full border border-indigo-200 bg-white dark:bg-slate-900/50 text-indigo-700 font-bold text-[10px] md:text-xs uppercase tracking-wide hover:bg-indigo-50 hover:border-indigo-300 transition-all shadow-sm whitespace-nowrap"
+                className="flex items-center gap-2 px-3 py-2 md:px-4 rounded-full border border-indigo-200 bg-white dark:bg-gray-800 dark:bg-slate-900/50 text-indigo-700 font-bold text-[10px] md:text-xs uppercase tracking-wide hover:bg-indigo-50 hover:border-indigo-300 transition-all shadow-sm whitespace-nowrap"
               >
                 <Download className="w-3.5 h-3.5 md:w-4 md:h-4" /> <span className="hidden xs:inline">Download App</span><span className="xs:hidden">App</span>
               </button>
@@ -129,7 +129,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLoginC
                     <ChevronDown className={`w-4 h-4 text-slate-600 dark:text-slate-400 dark:text-slate-500 transition-transform ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {isProfileMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-900 rounded-md shadow-lg py-1 z-50">
+                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 dark:bg-slate-900 rounded-md shadow-lg py-1 z-50">
                       <button onClick={handleProfileClick} className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">
                         <UserIcon className="w-4 h-4" />
                         Profile
@@ -173,7 +173,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLoginC
         <div className="flex-1 text-center md:text-left space-y-6 md:space-y-8">
           
           {/* Micro-Delight: Pulsing Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white dark:bg-slate-900/60 border border-indigo-100 dark:border-indigo-900/30 text-indigo-600 text-xs font-bold uppercase tracking-wide shadow-[0_2px_10px_-3px_rgba(99,102,241,0.2)] backdrop-blur-md hover:bg-white dark:bg-slate-900 hover:shadow-indigo-200/50 transition-all duration-300 cursor-default group">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white dark:bg-gray-800 dark:bg-slate-900/60 border border-indigo-100 dark:border-indigo-900/30 text-indigo-600 text-xs font-bold uppercase tracking-wide shadow-[0_2px_10px_-3px_rgba(99,102,241,0.2)] backdrop-blur-md hover:bg-white dark:bg-gray-800 dark:bg-slate-900 hover:shadow-indigo-200/50 transition-all duration-300 cursor-default group">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
@@ -214,7 +214,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLoginC
               <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#F1F5F9_0%,#F1F5F9_50%,#6366F1_75%,#EC4899_100%)]" />
               
               {/* 2. Main Button Content */}
-              <span className="relative flex items-center justify-center gap-3 h-full w-full rounded-full bg-white dark:bg-slate-900 px-8 py-4 text-lg font-bold text-slate-900 dark:text-slate-100 backdrop-blur-3xl transition-all duration-300 group-hover:bg-slate-50 dark:bg-slate-800/50">
+              <span className="relative flex items-center justify-center gap-3 h-full w-full rounded-full bg-white dark:bg-gray-800 dark:bg-slate-900 px-8 py-4 text-lg font-bold text-slate-900 dark:text-slate-100 backdrop-blur-3xl transition-all duration-300 group-hover:bg-slate-50 dark:bg-slate-800/50">
                 <div className="absolute top-0 -left-[100%] w-full h-full bg-gradient-to-r from-transparent via-slate-400/20 to-transparent transform -skew-x-12 transition-all duration-700 group-hover:left-[100%] ease-in-out" />
                 <span className="flex items-center">
                   Start&nbsp;<Typewriter />
@@ -233,8 +233,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLoginC
               </button>
             )}
 
-            <button className="group hidden sm:flex items-center gap-3 px-6 py-4 text-slate-600 dark:text-slate-400 dark:text-slate-500 font-semibold transition-all w-full sm:w-auto justify-center rounded-full hover:bg-white dark:bg-slate-900/50 hover:text-indigo-700 border border-transparent hover:border-indigo-100 dark:border-indigo-900/30">
-              <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:scale-110 transition-all duration-300 text-slate-900 dark:text-slate-100 group-hover:text-indigo-600">
+            <button className="group hidden sm:flex items-center gap-3 px-6 py-4 text-slate-600 dark:text-slate-400 dark:text-slate-500 font-semibold transition-all w-full sm:w-auto justify-center rounded-full hover:bg-white dark:bg-gray-800 dark:bg-slate-900/50 hover:text-indigo-700 border border-transparent hover:border-indigo-100 dark:border-indigo-900/30">
+              <div className="w-10 h-10 rounded-full bg-white dark:bg-gray-800 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:scale-110 transition-all duration-300 text-slate-900 dark:text-slate-100 group-hover:text-indigo-600">
                 <Play className="w-4 h-4 ml-0.5 fill-current" />
               </div>
               <span>Watch Demo</span>
@@ -293,7 +293,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLoginC
             />
             
             <div className="absolute -bottom-6 -left-8 p-[1px] rounded-2xl bg-gradient-to-br from-white/80 via-white/20 to-transparent animate-float animation-delay-2000 z-30 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.15)]">
-               <div className="bg-white dark:bg-slate-900/80 dark:bg-slate-900/80 backdrop-blur-md p-4 pr-6 rounded-2xl flex items-center gap-4 h-full w-full">
+               <div className="bg-white dark:bg-gray-800 dark:bg-slate-900/80 dark:bg-slate-900/80 backdrop-blur-md p-4 pr-6 rounded-2xl flex items-center gap-4 h-full w-full">
                   <div className="bg-emerald-100 dark:bg-emerald-900/40 p-2.5 rounded-xl text-emerald-600 dark:text-emerald-400">
                     <Target className="w-6 h-6" />
                   </div>
@@ -304,7 +304,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLoginC
                </div>
             </div>
 
-            <div className="absolute -top-12 left-8 bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-xl shadow-indigo-500/10 animate-bounce-slow z-30 transform -rotate-12">
+            <div className="absolute -top-12 left-8 bg-white dark:bg-gray-800 dark:bg-slate-900 p-4 rounded-3xl shadow-xl shadow-indigo-500/10 animate-bounce-slow z-30 transform -rotate-12">
                 <Brain className="w-8 h-8 text-indigo-600" />
             </div>
           </div>
@@ -336,7 +336,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLoginC
       </div>
 
       {/* Footer Strip / Feature Ticker */}
-      <div className="w-full border-t border-white/50 dark:border-slate-800/50 bg-white dark:bg-slate-900/30 backdrop-blur-lg py-6 mt-auto pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+      <div className="w-full border-t border-white/50 dark:border-slate-800/50 bg-white dark:bg-gray-800 dark:bg-slate-900/30 backdrop-blur-lg py-6 mt-auto pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
         <div className="max-w-7xl mx-auto px-4 flex flex-wrap justify-center md:justify-between gap-8 text-slate-400 dark:text-slate-500 text-xs md:text-sm font-bold uppercase tracking-widest mb-4">
           <div className="flex items-center gap-2 hover:text-indigo-500 transition-colors cursor-default"><Zap className="w-4 h-4" /> Instant Evaluation</div>
           <div className="hidden md:block w-1 h-1 rounded-full bg-slate-300"></div>

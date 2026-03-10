@@ -62,7 +62,7 @@ export const VocabQuizHome: React.FC<VocabQuizHomeProps> = ({ onBack, onIdiomsCl
            <Button 
               variant="ghost" 
               onClick={onBack} 
-              className="text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 flex items-center gap-2 transition-colors"
+              className="text-gray-500 dark:text-gray-400 dark:text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 flex items-center gap-2 transition-colors"
            >
              <ArrowLeft className="w-4 h-4" /> Back to English
            </Button>
@@ -70,10 +70,10 @@ export const VocabQuizHome: React.FC<VocabQuizHomeProps> = ({ onBack, onIdiomsCl
 
         {/* Hero Header */}
         <div className="text-center max-w-2xl mx-auto px-4">
-          <h1 className="text-3xl sm:text-5xl font-black text-gray-900 leading-tight mb-4">
+          <h1 className="text-3xl sm:text-5xl font-black text-gray-900 dark:text-white dark:text-white leading-tight mb-4">
             Vocabulary <span className="text-emerald-600">Master</span>
           </h1>
-          <p className="text-gray-500 font-medium">
+          <p className="text-gray-500 dark:text-gray-400 dark:text-gray-400 font-medium">
             Select a topic to begin your practice session.
           </p>
         </div>
@@ -84,7 +84,7 @@ export const VocabQuizHome: React.FC<VocabQuizHomeProps> = ({ onBack, onIdiomsCl
             <button
               key={index}
               onClick={item.action}
-              className={`w-full p-5 bg-white rounded-2xl border border-gray-200 shadow-sm transition-all duration-300 group flex items-center gap-5 text-left hover:shadow-md hover:-translate-y-1 ${item.borderClass}`}
+              className={`w-full p-5 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 dark:border-gray-700 shadow-sm transition-all duration-300 group flex items-center gap-5 text-left hover:shadow-md hover:-translate-y-1 ${item.borderClass}`}
             >
               {/* Icon Box */}
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 ${item.iconBg}`}>
@@ -93,16 +93,16 @@ export const VocabQuizHome: React.FC<VocabQuizHomeProps> = ({ onBack, onIdiomsCl
 
               {/* Text Content */}
               <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-bold text-gray-900 group-hover:text-indigo-900 truncate">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white dark:text-white group-hover:text-indigo-900 truncate">
                   {item.title}
                 </h3>
-                <p className="text-sm text-gray-500 font-medium truncate">
+                <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-400 font-medium truncate">
                   {item.description}
                 </p>
               </div>
 
               {/* Action Arrow */}
-              <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+              <div className="w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-900 dark:bg-gray-900 flex items-center justify-center text-gray-400 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
                 <ChevronRight className="w-5 h-5" />
               </div>
             </button>

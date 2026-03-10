@@ -188,7 +188,7 @@ export const MockSession: React.FC<MockSessionProps> = ({ questions, initialTime
     );
 
     const footer = (
-        <div className="p-4 bg-white border-t border-gray-200 flex justify-between items-center gap-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 dark:border-gray-700 flex justify-between items-center gap-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
             <div className="flex gap-2 items-center">
                 <Button variant="outline" onClick={handlePrev} disabled={currentIndex === 0} className="px-3">
                     <ChevronLeft className="w-5 h-5" />
@@ -199,7 +199,7 @@ export const MockSession: React.FC<MockSessionProps> = ({ questions, initialTime
                         "p-2.5 rounded-lg border flex items-center justify-center transition-colors",
                         markedForReview.includes(questions[currentIndex].id)
                             ? "bg-purple-100 border-purple-300 text-purple-700"
-                            : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
+                            : "bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 dark:border-gray-600 text-gray-500 dark:text-gray-400 dark:text-gray-400 hover:bg-gray-50 dark:bg-gray-900"
                     )}
                     title="Mark for Review"
                 >
@@ -256,7 +256,7 @@ export const MockSession: React.FC<MockSessionProps> = ({ questions, initialTime
                         />
                         {showConfirmModal && (
                             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-                                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center scale-100 animate-in zoom-in-95 duration-200">
+                                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center scale-100 animate-in zoom-in-95 duration-200">
                                     <div className={cn(
                                         "w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4",
                                         questions.length - attemptedCount > 0 ? "bg-amber-100 text-amber-600" : "bg-green-100 text-green-600"
@@ -264,9 +264,9 @@ export const MockSession: React.FC<MockSessionProps> = ({ questions, initialTime
                                         {questions.length - attemptedCount > 0 ? <AlertTriangle className="w-8 h-8" /> : <CheckCircle className="w-8 h-8" />}
                                     </div>
 
-                                    <h2 className="text-xl font-bold text-gray-900 mb-2">Submit Test?</h2>
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-white dark:text-white mb-2">Submit Test?</h2>
 
-                                    <div className="text-gray-600 mb-6 space-y-1">
+                                    <div className="text-gray-600 dark:text-gray-300 dark:text-gray-300 mb-6 space-y-1">
                                         <p>You have attempted <span className="font-bold text-indigo-600">{attemptedCount}</span> out of <span className="font-bold">{questions.length}</span> questions.</p>
                                     </div>
 

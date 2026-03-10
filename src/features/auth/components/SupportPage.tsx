@@ -17,7 +17,7 @@ const SupportPage: React.FC<SupportPageProps> = ({ onBack }) => {
         </div>
 
         {/* Support Section */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 mb-6 overflow-hidden relative">
+        <div className="bg-white dark:bg-gray-800 rounded-3xl border border-slate-200/80 shadow-sm p-6 mb-6 overflow-hidden relative">
           <div className="absolute top-0 right-0 w-32 h-32 bg-sky-50 rounded-bl-full -z-10"></div>
 
           <h2 className="text-xl font-black text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-3">
@@ -27,7 +27,7 @@ const SupportPage: React.FC<SupportPageProps> = ({ onBack }) => {
               How can we help you?
           </h2>
           <div className="space-y-4">
-            <button className="w-full flex items-center justify-between p-5 bg-white rounded-2xl border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all group">
+            <button className="w-full flex items-center justify-between p-5 bg-white dark:bg-gray-800 rounded-2xl border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all group">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-500">
                   <FileText className="w-6 h-6" />
@@ -40,7 +40,7 @@ const SupportPage: React.FC<SupportPageProps> = ({ onBack }) => {
               <ExternalLink className="w-5 h-5 text-slate-300 group-hover:text-blue-500 transition-colors" />
             </button>
 
-            <button className="w-full flex items-center justify-between p-5 bg-white rounded-2xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all group">
+            <button className="w-full flex items-center justify-between p-5 bg-white dark:bg-gray-800 rounded-2xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all group">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl flex items-center justify-center text-indigo-500">
                   <MessageCircle className="w-6 h-6" />
@@ -57,10 +57,10 @@ const SupportPage: React.FC<SupportPageProps> = ({ onBack }) => {
 
         {/* Share Achievements */}
         <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl shadow-lg p-8 relative overflow-hidden group hover:shadow-emerald-500/30 transition-shadow">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-full backdrop-blur-sm -z-0"></div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white dark:bg-gray-800/10 rounded-bl-full backdrop-blur-sm -z-0"></div>
 
           <div className="relative z-10 flex items-center gap-4 mb-6">
-            <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-white backdrop-blur-sm border border-white/30">
+            <div className="w-14 h-14 bg-white dark:bg-gray-800/20 rounded-2xl flex items-center justify-center text-white backdrop-blur-sm border border-white/30">
               <Award className="w-7 h-7" />
             </div>
             <div>
@@ -69,7 +69,7 @@ const SupportPage: React.FC<SupportPageProps> = ({ onBack }) => {
             </div>
           </div>
 
-          <button className="relative z-10 w-full flex items-center justify-center gap-3 p-4 bg-white text-emerald-700 rounded-2xl font-black text-lg shadow-md hover:bg-emerald-50 hover:scale-[1.02] transition-all duration-300">
+          <button className="relative z-10 w-full flex items-center justify-center gap-3 p-4 bg-white dark:bg-gray-800 text-emerald-700 rounded-2xl font-black text-lg shadow-md hover:bg-emerald-50 hover:scale-[1.02] transition-all duration-300">
             <Share2 className="w-5 h-5" />
             Share via WhatsApp
           </button>

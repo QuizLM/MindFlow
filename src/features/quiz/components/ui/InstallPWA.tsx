@@ -18,10 +18,10 @@ export const InstallPWA: React.FC = () => {
   if (isInstalled || !canInstall) return null;
 
   return (
-    <div className="py-4 border-t border-gray-100 mt-4">
+    <div className="py-4 border-t border-gray-100 dark:border-gray-800 dark:border-gray-800 mt-4">
         <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
             <div className="flex items-start gap-3">
-                <div className="p-2 bg-white rounded-lg shadow-sm">
+                <div className="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
                     <Download className="w-5 h-5 text-indigo-600" />
                 </div>
                 <div className="flex-1">
