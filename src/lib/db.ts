@@ -4,12 +4,25 @@ import { QuizState } from '../features/quiz/types/store';
 import { supabase } from './supabase';
 import { syncService } from './syncService';
 
+export interface SynonymInteraction {
+  wordId: string;
+  wordString: string;
+  masteryLevel: 'new' | 'familiar' | 'mastered';
+  dailyChallengeScore?: number;
+  gamificationScore?: number;
+  viewedExplanation?: boolean;
+  viewedWordFamily?: boolean;
+  lastInteractedAt: string;
+}
+
+
 
 const DB_NAME = 'MindFlowDB';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const STORE_NAME = 'saved_quizzes';
 const HISTORY_STORE_NAME = 'quiz_history';
 const BOOKMARKS_STORE_NAME = 'global_bookmarks';
+const SYNONYM_STORE_NAME = 'synonym_interactions';
 
 /**
  * Opens a connection to the IndexedDB database.
@@ -34,6 +47,9 @@ const openDB = (): Promise<IDBDatabase> => {
             if (!db.objectStoreNames.contains(BOOKMARKS_STORE_NAME)) {
                 db.createObjectStore(BOOKMARKS_STORE_NAME, { keyPath: 'id' });
             }
+            if (!db.objectStoreNames.contains(SYNONYM_STORE_NAME)) {
+                db.createObjectStore(SYNONYM_STORE_NAME, { keyPath: 'wordId' });
+            }
         };
 
         request.onsuccess = (event) => {
@@ -54,13 +70,14 @@ const openDB = (): Promise<IDBDatabase> => {
  */
 export const db = {
     /** Background push helper to sync to Supabase if logged in */
-    _pushToSupabase: async (type: 'quiz' | 'history' | 'bookmark', data: any) => {
+    _pushToSupabase: async (type: 'quiz' | 'history' | 'bookmark' | 'synonym_interaction', data: any) => {
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session?.user) return;
             if (type === 'quiz') await syncService.pushSavedQuiz(session.user.id, data);
             else if (type === 'history') await syncService.pushQuizHistory(session.user.id, data);
             else if (type === 'bookmark') await syncService.pushBookmark(session.user.id, data);
+            else if (type === 'synonym_interaction') await syncService.pushSynonymInteraction(session.user.id, data);
         } catch (e) {
             console.error('Background push error:', e);
         }
@@ -353,6 +370,55 @@ export const db = {
         return new Promise((resolve, reject) => {
             const transaction = dbInstance.transaction(BOOKMARKS_STORE_NAME, 'readwrite');
             const store = transaction.objectStore(BOOKMARKS_STORE_NAME);
+            const request = store.clear();
+
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
+    },
+
+
+    /**
+     * Saves a synonym interaction.
+     */
+    saveSynonymInteraction: async (interaction: SynonymInteraction): Promise<void> => {
+        const dbInstance = await openDB();
+        return new Promise((resolve, reject) => {
+            const transaction = dbInstance.transaction(SYNONYM_STORE_NAME, 'readwrite');
+            const store = transaction.objectStore(SYNONYM_STORE_NAME);
+            const request = store.put(interaction);
+
+            request.onsuccess = () => {
+                db._pushToSupabase('synonym_interaction', interaction);
+                resolve();
+            };
+            request.onerror = () => reject(request.error);
+        });
+    },
+
+    /**
+     * Retrieves all synonym interactions.
+     */
+    getAllSynonymInteractions: async (): Promise<SynonymInteraction[]> => {
+        const dbInstance = await openDB();
+        return new Promise((resolve, reject) => {
+            const transaction = dbInstance.transaction(SYNONYM_STORE_NAME, 'readonly');
+            const store = transaction.objectStore(SYNONYM_STORE_NAME);
+            const request = store.getAll();
+
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    },
+
+    /**
+     * Clears all synonym interactions.
+     */
+    clearSynonymInteractions: async (): Promise<void> => {
+        const dbInstance = await openDB();
+        return new Promise((resolve, reject) => {
+            const transaction = dbInstance.transaction(SYNONYM_STORE_NAME, 'readwrite');
+            const store = transaction.objectStore(SYNONYM_STORE_NAME);
             const request = store.clear();
 
             request.onsuccess = () => resolve();
