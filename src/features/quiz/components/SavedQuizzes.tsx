@@ -112,7 +112,7 @@ export const SavedQuizzes: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 dark:bg-gray-900 dark:bg-slate-800/50">
+            <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-slate-900">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
             </div>
         );
@@ -120,7 +120,7 @@ export const SavedQuizzes: React.FC = () => {
 
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 dark:bg-gray-900 dark:bg-slate-800/50 p-4 md:p-8">
+        <div className="min-h-screen bg-gray-50 dark:bg-slate-900 p-4 md:p-8">
             <div className="max-w-4xl mx-auto">
                 <div className="mb-6">
                     <button
@@ -132,32 +132,35 @@ export const SavedQuizzes: React.FC = () => {
                 </div>
                 <div className="flex items-center justify-between mb-8">
 
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white dark:text-white dark:text-slate-100">Created Quizzes</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Created Quizzes</h1>
                     <div className="flex gap-4">
                         <button
                             onClick={() => navigate('/quiz/config')}
-                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                            className="px-4 py-2.5 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 font-bold rounded-xl border border-indigo-200 dark:border-indigo-900/40 border-b-4 border-b-indigo-300 dark:border-b-indigo-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 active:translate-y-1 active:border-b transition-all shadow-sm flex items-center gap-2"
                         >
+                            <PlusCircle className="w-5 h-5" />
                             Create New Quiz
                         </button>
                         <button
                             onClick={() => navigate('/quiz/attempted')}
-                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                            className="px-4 py-2.5 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 font-bold rounded-xl border border-emerald-200 dark:border-emerald-900/40 border-b-4 border-b-emerald-300 dark:border-b-emerald-700 hover:border-emerald-400 dark:hover:border-emerald-500 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 active:translate-y-1 active:border-b transition-all shadow-sm flex items-center gap-2"
                         >
+                            <CheckCircle className="w-5 h-5" />
                             Attempted Quizzes
                         </button>
                     </div>
                 </div>
 
                 {quizzes.length === 0 ? (
-                    <div className="text-center py-12 bg-white dark:bg-gray-800 dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 dark:border-gray-800 dark:border-slate-800">
+                    <div className="text-center py-12 bg-white dark:bg-gray-800 dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800">
                         <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 dark:text-white dark:text-white dark:text-slate-100 mb-2">No Created Quizzes</h3>
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Created Quizzes</h3>
                         <p className="text-gray-500 dark:text-gray-400 dark:text-gray-400 dark:text-slate-400 dark:text-slate-500 mb-6">Start a new quiz to see it here!</p>
                         <button
                             onClick={() => navigate('/quiz/config')}
-                            className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                            className="px-6 py-3 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 font-bold rounded-xl border border-indigo-200 dark:border-indigo-900/40 border-b-4 border-b-indigo-300 dark:border-b-indigo-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 active:translate-y-1 active:border-b transition-all shadow-sm flex items-center gap-2 mx-auto"
                         >
+                            <PlusCircle className="w-5 h-5" />
                             Create Quiz
                         </button>
                     </div>
@@ -167,7 +170,7 @@ export const SavedQuizzes: React.FC = () => {
                             <div
                                 key={quiz.id}
                                 onClick={() => handleResume(quiz)}
-                                className="bg-white dark:bg-gray-800 dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 dark:border-gray-800 dark:border-slate-800 hover:shadow-md transition-shadow cursor-pointer group"
+                                className="bg-white dark:bg-gray-800 dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 hover:shadow-md transition-shadow cursor-pointer group"
                             >
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1 mr-4">
@@ -190,7 +193,7 @@ export const SavedQuizzes: React.FC = () => {
                                             </div>
                                         ) : (
                                             <div className="flex items-center gap-2 mb-2">
-                                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white dark:text-white dark:text-slate-100 group-hover:text-indigo-600 dark:text-indigo-400 transition-colors">
+                                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:text-indigo-400 transition-colors">
                                                     {quiz.name || 'Untitled Quiz'}
                                                 </h3>
                                                 <button
