@@ -1,2 +1,1 @@
-git checkout HEAD -- .
-git checkout HEAD --patch
+git checkout HEAD -- src/features/quiz/hooks/useQuiz.ts
