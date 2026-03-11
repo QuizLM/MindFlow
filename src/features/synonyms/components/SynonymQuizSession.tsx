@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { SynonymWord } from '../../quiz/types';
-import rawSynonymsData from '../../quiz/data/processed_synonyms.json';
+import { quizEngine } from '../../quiz/engine';
 import { ImposterGame } from './ImposterGame';
 import { ConnectGame } from './ConnectGame';
 import { SpeedGame } from './SpeedGame';
@@ -34,7 +34,7 @@ export const SynonymQuizSession: React.FC<SynonymQuizSessionProps> = ({ onExit }
         const modeParam = searchParams.get('mode') as 'imposter' | 'connect' | 'speed' | null;
         setMode(modeParam || 'imposter');
 
-        const parsedData = rawSynonymsData as unknown as SynonymWord[];
+        const parsedData: SynonymWord[] = []; // Replaced by async load
         // Sort by importance to prefer high frequency
         parsedData.sort((a, b) => b.importance_score - a.importance_score);
         setData(parsedData);

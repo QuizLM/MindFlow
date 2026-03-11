@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SynonymWord } from '../quiz/types';
-import rawSynonymsData from '../quiz/data/processed_synonyms.json';
-
+import { quizEngine } from '../quiz/engine';
 interface SynonymsConfigProps {
     onBack: () => void;
     onStart: (data: SynonymWord[], filters: any) => void;
@@ -16,11 +15,8 @@ export const SynonymsConfig: React.FC<SynonymsConfigProps> = ({ onBack, onStart 
         const load = async () => {
             try {
                 // In a real scenario, this might be a fetch or complex parse
-                const parsed = rawSynonymsData as unknown as SynonymWord[];
-
-                // Sort by importance_score descending (Heatmap Hot first)
-                parsed.sort((a, b) => b.importance_score - a.importance_score);
-
+                const parsed = await quizEngine.getPlugin<SynonymWord, string>('synonym').loadQuestions();
+                parsed.sort((a, b) => (a.word || '').localeCompare(b.word || ''));
                 setData(parsed);
             } catch(e) {
                 console.error("Failed to load synonyms data", e);
