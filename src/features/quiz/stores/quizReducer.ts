@@ -78,6 +78,9 @@ export function quizReducer(state: QuizState, action: QuizAction): QuizState {
     case 'ENTER_IDIOMS_CONFIG':
       return { ...state, status: 'idioms-config' };
 
+    case 'ENTER_SYNONYMS_CONFIG':
+      return { ...initialState, status: 'synonyms-config' };
+
     case 'ENTER_OWS_CONFIG':
       return { ...state, status: 'ows-config' };
 
@@ -122,7 +125,22 @@ export function quizReducer(state: QuizState, action: QuizAction): QuizState {
       };
     }
 
+<<<<<<< jules-synonyms-mastery-6424019007774483754
+    case 'START_SYNONYM_FLASHCARDS': {
+      const { data, filters } = action.payload;
+      return {
+        ...initialState,
+        status: 'synonym-flashcards',
+        activeSynonyms: data,
+        filters: filters,
+        currentQuestionIndex: 0
+      };
+    }
+
+    case 'START_OWS_FLASHCARDS': {
+=======
         case 'START_OWS_FLASHCARDS': {
+>>>>>>> main
       const { data, filters } = action.payload;
       return {
         ...initialState,

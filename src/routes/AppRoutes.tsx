@@ -142,7 +142,7 @@ const AppRoutesContent: React.FC = () => {
                             }}
                         />
                     } />
-                    <Route path="/synonyms/list" element={<SynonymClusterList onExit={() => navTo('/synonyms/config')} />} />
+                    <Route path="/synonyms/list" element={<SynonymClusterList data={state.activeSynonyms || []} onSelectWord={(word) => { jumpToQuestion(state.activeSynonyms?.findIndex(w => w.id === word.id) || 0); navTo('/synonyms/session'); }} onExit={() => navTo('/synonyms/config')} />} />
                     <Route path="/synonyms/quiz" element={<SynonymQuizSession onExit={() => navTo('/synonyms/config')} />} />
 
                     <Route path="/synonyms/config" element={
@@ -154,7 +154,7 @@ const AppRoutesContent: React.FC = () => {
                             }}
                         />
                     } />
-                    <Route path="/synonyms/list" element={<SynonymClusterList onExit={() => navTo('/synonyms/config')} />} />
+                    <Route path="/synonyms/list" element={<SynonymClusterList data={state.activeSynonyms || []} onSelectWord={(word) => { jumpToQuestion(state.activeSynonyms?.findIndex(w => w.id === word.id) || 0); navTo('/synonyms/session'); }} onExit={() => navTo('/synonyms/config')} />} />
                     <Route path="/synonyms/quiz" element={<SynonymQuizSession onExit={() => navTo('/synonyms/config')} />} />
 
                     <Route path="/ows/config" element={

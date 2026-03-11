@@ -55,6 +55,7 @@ export default defineConfig(({ mode }) => {
             ]
           },
           workbox: {
+        maximumFileSizeToCacheInBytes: 15000000,
             // Cache Google Fonts and other static assets
             runtimeCaching: [
               {
