@@ -30,13 +30,15 @@ export const SynonymPhase1Session: React.FC = () => {
     // Refs for animations
     const wordDisplayRef = useRef<HTMLDivElement>(null);
 
+    const { data: fetchedData, isLoading: isDataLoading } = useSynonymsData();
+
     // Load and process data based on grouping mode
     useEffect(() => {
         setIsLoading(true);
         const parsed: SynonymWord[] = []; // Replaced by async load
 
         // Ensure some basic sorting so chunking is deterministic
-        const sortedData = [...parsed].sort((a, b) => a.word.localeCompare(b.word));
+        const sortedData = [...fetchedData].sort((a, b) => a.word.localeCompare(b.word));
 
         let groups: WordGroup[] = [];
 

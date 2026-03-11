@@ -20,17 +20,22 @@ import { fetchQuestionMetadata, fetchQuestionsByIds } from '../services/question
 import { Question, InitialFilters, QuizMode, SavedQuiz } from '../types';
 import { cn } from '../../../utils/cn';
 import { useDependentFilters } from '../../../hooks/useDependentFilters';
-import { useFilterCounts } from '../../../hooks/useFilterCounts';
 import { db } from '../../../lib/db';
 import { APP_CONFIG } from '../../../constants/config';
 import { initialState } from '../stores/quizReducer';
 
 // UI Components
+import { CookingLoader } from './CookingLoader';
 import { FilterGroup } from './ui/FilterGroup';
 import { MultiSelectDropdown } from './ui/MultiSelectDropdown';
 import { SegmentedControl } from './ui/SegmentedControl';
 import { QuickStartButtons } from './ui/QuickStartButtons';
 import { ActiveFiltersBar } from './ui/ActiveFiltersBar';
+import { Accordion } from './ui/Accordion';
+
+// Optimization Hooks
+import { useQuestionIndex, filterQuestionsByIndex } from '../hooks/useQuestionIndex';
+import { useOptimizedFilterCounts } from '../hooks/useOptimizedFilterCounts';
 
 interface QuizConfigProps {
   onStart: (questions: Question[], filters?: InitialFilters, mode?: QuizMode) => void;
@@ -49,19 +54,6 @@ const emptyFilters: InitialFilters = {
   tags: [],
 };
 
-/**
- * The Quiz Configuration Screen.
- *
- * Allows users to:
- * - Load question metadata from the database.
- * - Filter questions by multiple criteria (Subject, Topic, Exam, etc.).
- * - Select Quiz Mode (Learning vs Mock).
- * - Create and save a new Quiz Session.
- * - Use Quick Start shortcuts.
- *
- * @param {QuizConfigProps} props - The component props.
- * @returns {JSX.Element} The rendered Configuration screen.
- */
 export const QuizConfig: React.FC<QuizConfigProps> = ({ onStart, onBack }) => {
   const navigate = useNavigate();
   const [mode, setMode] = useState<QuizMode>('learning');
@@ -77,7 +69,6 @@ export const QuizConfig: React.FC<QuizConfigProps> = ({ onStart, onBack }) => {
   const [showEmptyError, setShowEmptyError] = useState(false);
 
   // 0. Fetch Metadata on Mount
-  // Loads lightweight question data for filtering (no content payload)
   const loadMetadata = useCallback(async () => {
     try {
       setIsLoadingMetadata(true);
@@ -105,8 +96,10 @@ export const QuizConfig: React.FC<QuizConfigProps> = ({ onStart, onBack }) => {
     loadMetadata();
   }, [loadMetadata]);
 
-  // 1. Build Classification Map
-  // Efficiently maps Subjects -> Topics -> SubTopics for dependent dropdowns
+  // 1. Build Indexes (Performance Optimization)
+  const questionIndex = useQuestionIndex(metadata);
+
+  // 2. Build Classification Map for dependent dropdowns
   const classificationMap = useMemo(() => {
     const map = new Map<string, Map<string, Set<string>>>();
     metadata.forEach(q => {
@@ -119,42 +112,31 @@ export const QuizConfig: React.FC<QuizConfigProps> = ({ onStart, onBack }) => {
     return map;
   }, [metadata]);
 
-  // 2. Hooks Integration for Filter Logic
+  // 3. Hooks Integration for Filter Logic
   const { availableTopics, availableSubTopics } = useDependentFilters({
     selectedFilters: filters,
     setSelectedFilters: setFilters,
     classificationMap
   });
 
-  // Calculate dynamic counts for all filter options based on current selection
-  const filterCounts = useFilterCounts({
+  // Calculate dynamic counts using Set operations
+  const filterCounts = useOptimizedFilterCounts({
     allQuestions: metadata,
-    selectedFilters: filters
+    selectedFilters: filters,
+    index: questionIndex
   });
 
-  // 3. Derived Lists for Dropdown Options
+  // 4. Derived Lists for Dropdown Options
   const allSubjects = useMemo(() => Array.from(classificationMap.keys()).sort(), [classificationMap]);
   const allExamNames = useMemo(() => Array.from(new Set(metadata.map(q => q.sourceInfo.examName))).sort(), [metadata]);
   const allExamYears = useMemo(() => Array.from(new Set(metadata.map(q => String(q.sourceInfo.examYear)))).sort(), [metadata]);
   const allExamShifts = useMemo(() => Array.from(new Set(metadata.map(q => q.sourceInfo.examDateShift || ''))).filter(Boolean).sort(), [metadata]);
   const allTags = useMemo(() => Array.from(new Set(metadata.flatMap(q => q.tags))).sort(), [metadata]);
 
-  // 4. Final Filtered Metadata Calculation
-  // This represents the potential quiz set based on current filters
+  // 5. Final Filtered Metadata Calculation using O(1) Set Intersections
   const filteredMetadata = useMemo(() => {
-    return metadata.filter(q => {
-      if (filters.subject.length > 0 && !filters.subject.includes(q.classification.subject)) return false;
-      if (filters.topic.length > 0 && !filters.topic.includes(q.classification.topic)) return false;
-      if (filters.subTopic.length > 0 && !filters.subTopic.includes(q.classification.subTopic || '')) return false;
-      if (filters.difficulty.length > 0 && !filters.difficulty.includes(q.properties.difficulty)) return false;
-      if (filters.questionType.length > 0 && !filters.questionType.includes(q.properties.questionType)) return false;
-      if (filters.examName.length > 0 && !filters.examName.includes(q.sourceInfo.examName)) return false;
-      if (filters.examYear.length > 0 && !filters.examYear.includes(String(q.sourceInfo.examYear))) return false;
-      if (filters.examDateShift.length > 0 && !filters.examDateShift.includes(q.sourceInfo.examDateShift || '')) return false;
-      if (filters.tags.length > 0 && !filters.tags.some(t => q.tags.includes(t))) return false;
-      return true;
-    });
-  }, [filters, metadata]);
+    return filterQuestionsByIndex(metadata, questionIndex, filters);
+  }, [metadata, questionIndex, filters]);
 
   // Clear "No questions found" error when filters change
   useEffect(() => {
@@ -164,21 +146,14 @@ export const QuizConfig: React.FC<QuizConfigProps> = ({ onStart, onBack }) => {
   }, [filteredMetadata.length]);
 
   // --- Handlers ---
-
-  /**
-   * Fetches full question data for the selected subset and saves the quiz session.
-   */
   const createQuizWithQuestions = async (questionSubset: Question[], activeFilters: InitialFilters) => {
     try {
       setIsStartingQuiz(true);
       const ids = questionSubset.map(q => q.id);
 
-      // Retrieve full content (text, options, explanations) from DB
       const fullQuestions = await fetchQuestionsByIds(ids);
-
       const quizId = crypto.randomUUID();
 
-      // Initialize the SavedQuiz object with default state
       const newQuiz: SavedQuiz = {
         id: quizId,
         name: quizName || `Quiz ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
@@ -193,18 +168,15 @@ export const QuizConfig: React.FC<QuizConfigProps> = ({ onStart, onBack }) => {
           activeQuestions: fullQuestions,
           filters: activeFilters,
           quizId: quizId,
-          // Initialize Global Timer for Mock Mode
           quizTimeRemaining: mode === 'mock'
             ? Math.max(APP_CONFIG.TIMERS.MOCK_MODE_DEFAULT_PER_QUESTION, fullQuestions.length * APP_CONFIG.TIMERS.MOCK_MODE_DEFAULT_PER_QUESTION)
             : 0,
-          // Initialize Individual Timers for Learning Mode
           remainingTimes: mode === 'learning'
             ? fullQuestions.reduce((acc, q) => ({ ...acc, [q.id]: APP_CONFIG.TIMERS.LEARNING_MODE_DEFAULT }), {})
             : {}
         }
       };
 
-      // Save to IndexedDB and redirect to Saved Quizzes list
       await db.saveQuiz(newQuiz);
       navigate('/quiz/saved');
 
@@ -216,7 +188,6 @@ export const QuizConfig: React.FC<QuizConfigProps> = ({ onStart, onBack }) => {
     }
   };
 
-  /** Main "Create Quiz" button handler. */
   const handleCreate = () => {
     if (filteredMetadata.length === 0) {
       setShowEmptyError(true);
@@ -226,8 +197,7 @@ export const QuizConfig: React.FC<QuizConfigProps> = ({ onStart, onBack }) => {
     createQuizWithQuestions(filteredMetadata, filters);
   };
 
-  /** Handles Quick Start buttons to launch pre-configured quizzes. */
-  const handleQuickStart = (type: 'Easy' | 'Medium' | 'Hard' | 'Mix') => {
+  const handleQuickStart = useCallback((type: 'Easy' | 'Medium' | 'Hard' | 'Mix') => {
     let quickFilters = emptyFilters;
     if (type !== 'Mix') {
       quickFilters = { ...emptyFilters, difficulty: [type] };
@@ -237,7 +207,6 @@ export const QuizConfig: React.FC<QuizConfigProps> = ({ onStart, onBack }) => {
       ? metadata
       : metadata.filter(q => q.properties.difficulty === type);
 
-    // Randomly select 25 questions
     const shuffled = [...subset].sort(() => 0.5 - Math.random()).slice(0, 25);
 
     if (shuffled.length === 0) {
@@ -246,21 +215,21 @@ export const QuizConfig: React.FC<QuizConfigProps> = ({ onStart, onBack }) => {
     }
 
     createQuizWithQuestions(shuffled, quickFilters);
-  };
+  }, [metadata]);
 
-  const handleFilterChange = (key: keyof InitialFilters, selected: string[]) => {
+  const handleFilterChange = useCallback((key: keyof InitialFilters, selected: string[]) => {
     setFilters(prev => ({ ...prev, [key]: selected }));
-  };
+  }, []);
 
-  const removeFilter = (key: keyof InitialFilters, value?: string) => {
+  const removeFilter = useCallback((key: keyof InitialFilters, value?: string) => {
     if (value) {
       setFilters(prev => ({ ...prev, [key]: prev[key].filter(item => item !== value) }));
     } else {
       setFilters(prev => ({ ...prev, [key]: [] }));
     }
-  };
+  }, []);
 
-  const handleSegmentToggle = (key: keyof InitialFilters, option: string) => {
+  const handleSegmentToggle = useCallback((key: keyof InitialFilters, option: string) => {
     setFilters(prev => {
       const current = prev[key];
       const isSelected = current.includes(option);
@@ -269,46 +238,29 @@ export const QuizConfig: React.FC<QuizConfigProps> = ({ onStart, onBack }) => {
         [key]: isSelected ? current.filter(i => i !== option) : [...current, option]
       };
     });
-  };
+  }, []);
 
   // --- Loading State Render ---
   if (isLoadingMetadata) {
-    const percentage = progress.total > 0 ? Math.round((progress.current / progress.total) * 100) : 0;
+    const percentage = progress.total > 0 ? (progress.current / progress.total) * 100 : 0;
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-6 bg-white dark:bg-gray-800 dark:bg-slate-900 md:rounded-3xl w-full max-w-6xl mx-auto md:border border-gray-200 dark:border-gray-700 dark:border-gray-700 dark:border-slate-800 shadow-sm animate-fade-in p-8">
-        <div className="relative">
-          <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-full">
-            <Database className="w-8 h-8 text-indigo-600 dark:text-indigo-400 animate-pulse" />
-          </div>
-          <div className="absolute -bottom-1 -right-1 bg-white dark:bg-gray-800 dark:bg-slate-900 rounded-full p-1">
-            <Loader2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400 animate-spin" />
-          </div>
-        </div>
-        <div className="text-center space-y-2 max-w-xs w-full">
-          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 dark:text-gray-100 dark:text-slate-200">Syncing Question Bank</h2>
-          <p className="text-gray-500 dark:text-gray-400 dark:text-gray-400 dark:text-slate-400 dark:text-slate-500 text-sm">
-            {progress.total > 0
-              ? `Indexed ${progress.current.toLocaleString()} of ${progress.total.toLocaleString()} items`
-              : 'Connecting to Database...'}
-          </p>
-          <div className="h-2 w-full bg-gray-100 dark:bg-gray-800 dark:bg-gray-800 rounded-full overflow-hidden mt-4">
-            <div className="h-full bg-indigo-600 transition-all duration-500 ease-out rounded-full" style={{ width: `${percentage}%` }} />
-          </div>
-          <p className="text-xs text-gray-400 dark:text-slate-500 font-medium text-right mt-1">{percentage}%</p>
-        </div>
-      </div>
+      <CookingLoader
+        progress={percentage}
+        syncedItems={progress.current}
+        totalItems={progress.total}
+      />
     );
   }
 
   // --- Error State Render ---
   if (error) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-4 bg-white dark:bg-gray-800 dark:bg-slate-900 md:rounded-3xl w-full max-w-6xl mx-auto md:border border-gray-200 dark:border-gray-700 dark:border-gray-700 dark:border-slate-800 shadow-sm p-8 text-center animate-fade-in">
+      <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-4 bg-white dark:bg-gray-800 md:rounded-3xl w-full max-w-6xl mx-auto md:border border-gray-200 dark:border-gray-700 shadow-sm p-8 text-center animate-fade-in">
         <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-full">
           <AlertCircle className="w-10 h-10 text-red-500" />
         </div>
-        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 dark:text-gray-100 dark:text-slate-200">Connection Error</h2>
-        <p className="text-gray-500 dark:text-gray-400 dark:text-gray-400 dark:text-slate-400 dark:text-slate-500 max-w-md">{error}</p>
+        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Connection Error</h2>
+        <p className="text-gray-500 dark:text-gray-400 max-w-md">{error}</p>
         <div className="flex gap-4 mt-4">
           <Button variant="outline" onClick={onBack}>Go Back</Button>
           <Button onClick={loadMetadata}>Retry</Button>
@@ -318,42 +270,42 @@ export const QuizConfig: React.FC<QuizConfigProps> = ({ onStart, onBack }) => {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 dark:bg-slate-900 min-h-screen md:min-h-0 md:h-auto md:rounded-3xl shadow-sm border border-gray-200 dark:border-gray-700 dark:border-gray-700 dark:border-slate-800 flex flex-col max-w-6xl mx-auto animate-fade-in overflow-hidden relative">
+    <div className="bg-white dark:bg-gray-800 min-h-screen md:min-h-0 md:h-auto md:rounded-3xl shadow-sm md:border border-gray-200 dark:border-gray-700 flex flex-col max-w-6xl mx-auto animate-fade-in overflow-hidden relative">
 
       {/* Overlay for "Starting Quiz" blocking interaction */}
       {isStartingQuiz && (
-        <div className="absolute inset-0 z-50 bg-white dark:bg-gray-800 dark:bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
+        <div className="absolute inset-0 z-50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
           <Loader2 className="w-12 h-12 text-indigo-600 dark:text-indigo-400 animate-spin mb-4" />
-          <h3 className="text-xl font-bold text-indigo-900">Creating Your Quiz</h3>
-          <p className="text-gray-500 dark:text-gray-400 dark:text-gray-400 dark:text-slate-400 dark:text-slate-500">Saving questions to database...</p>
+          <h3 className="text-xl font-bold text-indigo-900 dark:text-indigo-100">Creating Your Quiz</h3>
+          <p className="text-gray-500 dark:text-gray-400">Saving questions to database...</p>
         </div>
       )}
 
       {/* Header */}
       <div className="px-6 pt-6 pb-2">
-        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 dark:text-gray-400 dark:text-slate-400 dark:text-slate-500 mb-4 cursor-pointer hover:text-indigo-600 dark:text-indigo-400 w-fit" onClick={onBack}>
+        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-4 cursor-pointer hover:text-indigo-600 dark:text-indigo-400 w-fit" onClick={onBack}>
           <ArrowLeft className="w-4 h-4" />
-          <span className="font-medium">HOME</span>
+          <span className="font-medium">Back</span>
         </div>
 
         <div className="text-center mb-4">
-          <h1 className="text-2xl md:text-3xl font-bold text-indigo-900 mb-1">Create New Quiz</h1>
-          <p className="text-sm md:text-base text-gray-500 dark:text-gray-400 dark:text-gray-400 dark:text-slate-400 dark:text-slate-500">Select from <span className="font-bold text-indigo-600 dark:text-indigo-400">{metadata.length.toLocaleString()}</span> available questions.</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-indigo-900 dark:text-indigo-100 mb-1">Create New Quiz</h1>
+          <p className="text-sm md:text-base text-gray-500 dark:text-gray-400">Select from <span className="font-bold text-indigo-600 dark:text-indigo-400">{metadata.length.toLocaleString()}</span> available questions.</p>
         </div>
       </div>
 
       {/* Scrollable Config Content */}
-      <div className="p-6 space-y-6 bg-gray-50 dark:bg-gray-900 dark:bg-gray-900 dark:bg-slate-800/50/50 flex-1 overflow-y-auto">
+      <div className="p-6 space-y-6 bg-gray-50 dark:bg-gray-900/50 flex-1 overflow-y-auto">
 
-        {/* Mode Selection - Responsive Grid */}
+        {/* Mode Selection */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <button
             onClick={() => setMode('learning')}
             className={cn(
               "relative flex flex-col items-center justify-center p-6 rounded-2xl transition-all border-2 group",
               mode === 'learning'
-                ? "bg-white dark:bg-gray-800 dark:bg-slate-900 border-indigo-600 shadow-lg"
-                : "bg-white dark:bg-gray-800 dark:bg-slate-900 border-gray-200 dark:border-gray-700 dark:border-gray-700 dark:border-slate-800 hover:border-indigo-300 shadow-sm hover:shadow-md"
+                ? "bg-white dark:bg-gray-800 border-indigo-600 dark:border-indigo-500 shadow-lg"
+                : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700 shadow-sm hover:shadow-md"
             )}
           >
             {mode === 'learning' && (
@@ -363,12 +315,12 @@ export const QuizConfig: React.FC<QuizConfigProps> = ({ onStart, onBack }) => {
             )}
             <div className={cn(
               "p-3 rounded-full mb-3",
-              mode === 'learning' ? "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400" : "bg-gray-100 dark:bg-gray-800 dark:bg-gray-800 text-gray-400 dark:text-slate-500 group-hover:bg-indigo-50 dark:bg-indigo-900/20 group-hover:text-indigo-500"
+              mode === 'learning' ? "bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400" : "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-300 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/40 group-hover:text-indigo-500"
             )}>
               <BookOpen className="w-6 h-6" />
             </div>
-            <div className="text-base font-bold text-gray-900 dark:text-white dark:text-white dark:text-slate-100">Learning Mode</div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-400 dark:text-slate-400 dark:text-slate-500 mt-1">Instant feedback & Explanations</div>
+            <div className="text-base font-bold text-gray-900 dark:text-white">Learning Mode</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Instant feedback & Explanations</div>
           </button>
 
           <button
@@ -376,8 +328,8 @@ export const QuizConfig: React.FC<QuizConfigProps> = ({ onStart, onBack }) => {
             className={cn(
               "relative flex flex-col items-center justify-center p-6 rounded-2xl transition-all border-2 group",
               mode === 'mock'
-                ? "bg-white dark:bg-gray-800 dark:bg-slate-900 border-indigo-600 shadow-lg"
-                : "bg-white dark:bg-gray-800 dark:bg-slate-900 border-gray-200 dark:border-gray-700 dark:border-gray-700 dark:border-slate-800 hover:border-indigo-300 shadow-sm hover:shadow-md"
+                ? "bg-white dark:bg-gray-800 border-indigo-600 dark:border-indigo-500 shadow-lg"
+                : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700 shadow-sm hover:shadow-md"
             )}
           >
             {mode === 'mock' && (
@@ -387,21 +339,18 @@ export const QuizConfig: React.FC<QuizConfigProps> = ({ onStart, onBack }) => {
             )}
             <div className={cn(
               "p-3 rounded-full mb-3",
-              mode === 'mock' ? "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400" : "bg-gray-100 dark:bg-gray-800 dark:bg-gray-800 text-gray-400 dark:text-slate-500 group-hover:bg-indigo-50 dark:bg-indigo-900/20 group-hover:text-indigo-500"
+              mode === 'mock' ? "bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400" : "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-300 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/40 group-hover:text-indigo-500"
             )}>
               <Timer className="w-6 h-6" />
             </div>
-            <div className="text-base font-bold text-gray-900 dark:text-white dark:text-white dark:text-slate-100">Mock Mode</div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-400 dark:text-slate-400 dark:text-slate-500 mt-1">Exam Sim (30s/Q), No hints</div>
+            <div className="text-base font-bold text-gray-900 dark:text-white">Mock Mode</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Exam Sim (30s/Q), No hints</div>
           </button>
         </div>
 
-        {/* Quick Start Component */}
         <QuickStartButtons onQuickStart={handleQuickStart} />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-          {/* Column 1: Classification */}
           <FilterGroup title="Classification" icon={<Layers className="w-5 h-5" />}>
             <MultiSelectDropdown
               label="Subject"
@@ -434,7 +383,6 @@ export const QuizConfig: React.FC<QuizConfigProps> = ({ onStart, onBack }) => {
             />
           </FilterGroup>
 
-          {/* Column 2: Properties */}
           <FilterGroup title="Properties" icon={<Settings className="w-5 h-5" />}>
             <SegmentedControl
               label="Difficulty"
@@ -453,93 +401,93 @@ export const QuizConfig: React.FC<QuizConfigProps> = ({ onStart, onBack }) => {
               counts={filterCounts.questionType}
             />
           </FilterGroup>
-
-          {/* Column 3: Source */}
-          <FilterGroup title="Source" icon={<FileText className="w-5 h-5" />}>
-            <MultiSelectDropdown
-              label="Exam Name"
-              tooltip="Filter by specific competitive exam source"
-              options={allExamNames}
-              selectedOptions={filters.examName}
-              onSelectionChange={(sel) => handleFilterChange('examName', sel)}
-              placeholder="Select Exams"
-              counts={filterCounts.examName}
-            />
-            <MultiSelectDropdown
-              label="Exam Year"
-              tooltip="Filter questions by the year they appeared"
-              options={allExamYears}
-              selectedOptions={filters.examYear}
-              onSelectionChange={(sel) => handleFilterChange('examYear', sel)}
-              placeholder="Select Years"
-              counts={filterCounts.examYear}
-            />
-            <MultiSelectDropdown
-              label="Exam Shift"
-              tooltip="Filter by specific exam date or shift"
-              options={allExamShifts}
-              selectedOptions={filters.examDateShift}
-              onSelectionChange={(sel) => handleFilterChange('examDateShift', sel)}
-              placeholder="Select Shifts"
-              counts={filterCounts.examDateShift}
-            />
-          </FilterGroup>
-
-          {/* Column 4: Tags */}
-          <FilterGroup title="Tags" icon={<Tag className="w-5 h-5" />}>
-            <MultiSelectDropdown
-              label="Search Tags"
-              tooltip="Filter using specific keywords or concepts"
-              options={allTags}
-              selectedOptions={filters.tags}
-              onSelectionChange={(sel) => handleFilterChange('tags', sel)}
-              placeholder="Filter by Tags"
-              counts={filterCounts.tags}
-            />
-          </FilterGroup>
         </div>
 
-        {/* Active Filters Component */}
-        <ActiveFiltersBar
-          filters={filters}
-          onRemoveFilter={removeFilter}
-        />
+        {/* Progressive Disclosure: Advanced Filters Accordion */}
+        <Accordion title="Advanced Filters">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <FilterGroup title="Source" icon={<FileText className="w-5 h-5" />}>
+              <MultiSelectDropdown
+                label="Exam Name"
+                options={allExamNames}
+                selectedOptions={filters.examName}
+                onSelectionChange={(sel) => handleFilterChange('examName', sel)}
+                placeholder="Select Exams"
+                counts={filterCounts.examName}
+              />
+              <MultiSelectDropdown
+                label="Exam Year"
+                options={allExamYears}
+                selectedOptions={filters.examYear}
+                onSelectionChange={(sel) => handleFilterChange('examYear', sel)}
+                placeholder="Select Years"
+                counts={filterCounts.examYear}
+              />
+              <MultiSelectDropdown
+                label="Exam Shift"
+                options={allExamShifts}
+                selectedOptions={filters.examDateShift}
+                onSelectionChange={(sel) => handleFilterChange('examDateShift', sel)}
+                placeholder="Select Shifts"
+                counts={filterCounts.examDateShift}
+              />
+            </FilterGroup>
+
+            <FilterGroup title="Tags" icon={<Tag className="w-5 h-5" />}>
+              <MultiSelectDropdown
+                label="Search Tags"
+                options={allTags}
+                selectedOptions={filters.tags}
+                onSelectionChange={(sel) => handleFilterChange('tags', sel)}
+                placeholder="Filter by Tags"
+                counts={filterCounts.tags}
+              />
+            </FilterGroup>
+          </div>
+        </Accordion>
+
+        {/* Active Filters Displayed above sticky footer area */}
+        <div className="pb-8">
+           <ActiveFiltersBar
+            filters={filters}
+            onRemoveFilter={removeFilter}
+            onClearAll={() => setFilters(emptyFilters)}
+          />
+        </div>
       </div>
 
-      {/* Footer */}
-      <div className="border-t border-gray-200 dark:border-gray-700 dark:border-gray-700 dark:border-slate-800 bg-white dark:bg-gray-800 dark:bg-slate-900 p-6">
-        <div className="flex flex-col gap-4">
-          {/* Quiz Name Input */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 dark:text-gray-200 dark:text-slate-300 mb-1">Quiz Name (Optional)</label>
+      {/* Sticky Action Footer */}
+      <div className="sticky bottom-0 left-0 w-full z-[40] border-t border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md px-4 py-3 pb-safe md:px-6 md:py-4 shadow-[0_-4px_15px_-5px_rgba(0,0,0,0.1)] dark:shadow-none">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-3 w-full">
+           {/* Quiz Name Input - Compact for footer */}
+           <div className="w-full sm:w-64 flex-shrink-0">
             <input
               type="text"
               value={quizName}
               onChange={(e) => setQuizName(e.target.value)}
-              placeholder="e.g. Biology Mock Test 1"
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+              placeholder="Quiz Name (Optional)"
+              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             />
           </div>
 
-          <div className="flex flex-col-reverse sm:flex-row justify-between items-center gap-4">
-            <Button variant="outline" onClick={() => setFilters(emptyFilters)} className="flex items-center gap-2 w-full sm:w-auto">
-              <RotateCcw className="w-4 h-4" /> Reset
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Button variant="outline" onClick={() => setFilters(emptyFilters)} className="flex-shrink-0 h-10 px-3">
+              <RotateCcw className="w-4 h-4" />
             </Button>
 
-            <div className="relative w-full sm:w-auto">
+            <div className="relative w-full">
               {showEmptyError && (
-                <div className="absolute bottom-full mb-3 right-0 sm:left-auto sm:right-0 w-full sm:w-64 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-xs font-semibold px-3 py-2 rounded-lg shadow-sm border border-red-100 animate-in fade-in slide-in-from-bottom-2 text-center sm:text-right z-10">
-                  No questions match your criteria. <br /> Please adjust filters.
-                  <div className="absolute top-full right-8 sm:right-12 border-4 border-transparent border-t-red-100"></div>
+                <div className="absolute bottom-full mb-2 left-0 w-full bg-red-50 dark:bg-red-900/40 text-red-600 dark:text-red-400 text-xs font-semibold px-3 py-2 rounded-lg shadow-md border border-red-100 dark:border-red-900/50 animate-in fade-in slide-in-from-bottom-2 text-center">
+                  No questions match your criteria.
                 </div>
               )}
               <Button
                 size="lg"
                 onClick={handleCreate}
                 disabled={isStartingQuiz}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white border-0 shadow-lg shadow-indigo-200 hover:shadow-xl hover:shadow-indigo-300 w-full sm:w-auto px-8 py-3 text-base flex items-center gap-2"
+                className="w-full h-10 bg-indigo-600 hover:bg-indigo-700 text-white border-0 shadow-lg px-6 flex items-center justify-center gap-2 font-semibold"
               >
-                <Save className="w-5 h-5" />
+                <Save className="w-4 h-4" />
                 {isStartingQuiz ? 'Creating...' : `Create Quiz (${filteredMetadata.length})`}
               </Button>
             </div>

@@ -10,6 +10,8 @@ interface ActiveFiltersBarProps {
   filters: InitialFilters;
   /** Callback to remove a specific filter value. */
   onRemoveFilter: (key: keyof InitialFilters, value?: string) => void;
+  /** Callback to clear all filters. */
+  onClearAll: () => void;
 }
 
 /**
@@ -20,24 +22,20 @@ interface ActiveFiltersBarProps {
  * @param {ActiveFiltersBarProps} props - The component props.
  * @returns {JSX.Element} The rendered ActiveFiltersBar.
  */
-export const ActiveFiltersBar: React.FC<ActiveFiltersBarProps> = ({ filters, onRemoveFilter }) => {
+export const ActiveFiltersBar: React.FC<ActiveFiltersBarProps> = ({ filters, onRemoveFilter, onClearAll }) => {
   // Explicitly type arr as string[] because Object.values return unknown[]/any[] depending on config
   const hasFilters = Object.values(filters).some((arr: string[]) => arr.length > 0);
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 dark:border-gray-700 p-4 shadow-sm transition-all">
+    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm transition-all">
       <div className="flex items-center justify-between mb-3">
-          <h4 className="text-sm font-bold text-gray-700 dark:text-gray-200 dark:text-gray-200 flex items-center gap-2">
+          <h4 className="text-sm font-bold text-gray-700 dark:text-gray-200 flex items-center gap-2">
             <Filter className="w-4 h-4" /> Active Filters
           </h4>
           {hasFilters && (
               <button 
-                onClick={() => {
-                    // We can add a clear all handler in parent, or loop here. 
-                    // For now relying on parent passing a specific remove function or user clearing one by one, 
-                    // but usually a "Reset" is available in the footer of Config page.
-                }}
-                className="text-xs text-gray-400 hover:text-red-500 hidden"
+                onClick={onClearAll}
+                className="text-xs font-semibold text-gray-500 hover:text-red-500 transition-colors"
               >
                   Clear All
               </button>

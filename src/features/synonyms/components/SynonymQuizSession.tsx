@@ -27,6 +27,8 @@ export const SynonymQuizSession: React.FC<SynonymQuizSessionProps> = ({ onExit }
     const TOTAL_ROUNDS = 10;
     const [currentRound, setCurrentRound] = useState(1);
 
+    const { data: fetchedData, isLoading: isDataLoading } = useSynonymsData();
+
     useEffect(() => {
         // Parse mode from hash routing manually since we're outside standard react-router in this block
         const hash = window.location.hash;
