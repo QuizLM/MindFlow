@@ -1,4 +1,9 @@
-import { useState, useCallback, useEffect } from 'react';
+const fs = require('fs');
+const path = require('path');
+
+const hookPath = path.join(__dirname, 'src', 'features', 'synonyms', 'hooks', 'useSynonymProgress.ts');
+
+const newHookContent = `import { useState, useCallback, useEffect } from 'react';
 import { SynonymWord } from '../../quiz/types';
 import { db, SynonymInteraction } from '../../../lib/db';
 
@@ -29,7 +34,7 @@ export const useSynonymProgress = () => {
                 }
                 for (const wordStr of Object.keys(parsed.familiar || {})) {
                     await db.saveSynonymInteraction({
-                        wordId: `legacy-familiar-${wordStr}`,
+                        wordId: \`legacy-familiar-\${wordStr}\`,
                         wordString: wordStr,
                         masteryLevel: 'familiar',
                         lastInteractedAt: new Date().toISOString()
@@ -81,11 +86,11 @@ export const useSynonymProgress = () => {
 
       for (const syn of wordObj.synonyms || []) {
           // Fallback ID for missing IDs from text-only synonyms
-          await updateInteraction(`syn-${syn.text}`, syn.text, { masteryLevel: 'familiar' });
+          await updateInteraction(\`syn-\${syn.text}\`, syn.text, { masteryLevel: 'familiar' });
       }
 
       for (const wordStr of clusterWords) {
-          await updateInteraction(`cluster-${wordStr}`, wordStr, { masteryLevel: 'familiar' });
+          await updateInteraction(\`cluster-\${wordStr}\`, wordStr, { masteryLevel: 'familiar' });
       }
   }, [interactions]);
 
@@ -154,3 +159,6 @@ export const useSynonymProgress = () => {
     clearProgress
   };
 };
+`;
+
+fs.writeFileSync(hookPath, newHookContent, 'utf8');

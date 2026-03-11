@@ -1,3 +1,6 @@
+/**
+ * @vitest-environment jsdom
+ */
 import { renderHook, act } from '@testing-library/react';
 import { useTextToSpeech } from './useTextToSpeech';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
