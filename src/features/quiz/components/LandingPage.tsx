@@ -10,6 +10,7 @@ import { usePWAInstall } from '../../../hooks/usePWAInstall';
 import InstallPwaModal from '../../../components/common/InstallPwaModal';
 import { User } from '@supabase/supabase-js';
 import founderImage from '../../../assets/aalok.jpg';
+import { CinematicIntro } from './Landing/CinematicIntro';
 
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -40,6 +41,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLoginC
   const [showToast, setShowToast] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isFounderImageOpen, setIsFounderImageOpen] = useState(false);
+  const [showMainContent, setShowMainContent] = useState(false);
 
   // Handlers
   const handleInstallClick = () => {
@@ -68,7 +70,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLoginC
   const shouldShowInstallButton = canInstall && installStatus !== 'success';
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-start pb-0 overflow-x-hidden bg-slate-50 dark:bg-slate-800/50 selection:bg-indigo-100 selection:text-indigo-900 font-sans pt-[env(safe-area-inset-top)]">
+    <>
+      {/* Intro Animation Layer */}
+      <CinematicIntro onReveal={() => setShowMainContent(true)} />
+
+      {/* Main Content Layer - mount/render when intro allows it */}
+      {showMainContent && (
+        <div className="relative min-h-screen flex flex-col items-center justify-start pb-0 overflow-x-hidden bg-slate-50 dark:bg-slate-800/50 selection:bg-indigo-100 selection:text-indigo-900 font-sans pt-[env(safe-area-inset-top)]">
       
       {/* --- 0. Noise Texture Overlay (Visual Polish) --- */}
       <div 
@@ -474,6 +482,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLoginC
             animation: fade-in-up 0.5s ease-out forwards;
         }
       `}</style>
-    </div>
+      </div>
+      )}
+    </>
   );
 };
