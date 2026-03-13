@@ -9,16 +9,81 @@ interface UseGenAILiveOptions {
     onError?: (error: Error) => void;
 }
 
+// --- Audio Helper Functions ---
+
+function floatTo16BitPCM(float32Array: Float32Array): ArrayBuffer {
+    const buffer = new ArrayBuffer(float32Array.length * 2);
+    const view = new DataView(buffer);
+    for (let i = 0; i < float32Array.length; i++) {
+        let s = Math.max(-1, Math.min(1, float32Array[i]));
+        view.setInt16(i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+    }
+    return buffer;
+}
+
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+}
+
+function base64ToUint8Array(base64: string): Uint8Array {
+    const binaryString = atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
+}
+
+const AudioRecorderWorkletCode = `
+class RecorderProcessor extends AudioWorkletProcessor {
+    constructor() {
+        super();
+        this.bufferSize = 2048; // Send chunks of ~2048 samples
+        this.buffer = new Float32Array(this.bufferSize);
+        this.index = 0;
+    }
+
+    process(inputs, outputs, parameters) {
+        const input = inputs[0];
+        if (input.length > 0) {
+            const channelData = input[0];
+            for (let i = 0; i < channelData.length; i++) {
+                this.buffer[this.index++] = channelData[i];
+                if (this.index >= this.bufferSize) {
+                    // Post buffer to main thread
+                    this.port.postMessage(this.buffer);
+                    this.index = 0;
+                }
+            }
+        }
+        return true;
+    }
+}
+
+registerProcessor('recorder-worklet', RecorderProcessor);
+`;
+
 export const useGenAILive = ({ quiz, voice, onStateChange, onError }: UseGenAILiveOptions) => {
     const [isMuted, setIsMuted] = useState(false);
     const sessionRef = useRef<any>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
     const mediaStreamRef = useRef<MediaStream | null>(null);
+    const sourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
     const workletNodeRef = useRef<AudioWorkletNode | null>(null);
     const nextStartTimeRef = useRef<number>(0);
 
+    const isConnectedRef = useRef<boolean>(false);
+
     const connect = useCallback(async () => {
         onStateChange?.('connecting');
+        isConnectedRef.current = false;
         try {
             // @ts-ignore
             let apiKey = process.env.GOOGLE_AI_KEY || process.env.GEMINI_API_KEY || process.env.API_KEY;
@@ -32,10 +97,14 @@ export const useGenAILive = ({ quiz, voice, onStateChange, onError }: UseGenAILi
             // Initialize Audio Context immediately for correct user gesture bindings
             const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
             if (!AudioContextClass) throw new Error("AudioContext is not supported in your browser.");
-            const audioContext = new AudioContextClass({ sampleRate: 24000 });
+            const audioContext = new AudioContextClass({ sampleRate: 16000 });
             await audioContext.resume();
             audioContextRef.current = audioContext;
             nextStartTimeRef.current = 0;
+
+            const blob = new Blob([AudioRecorderWorkletCode], { type: "application/javascript" });
+            const workletUrl = URL.createObjectURL(blob);
+            await audioContext.audioWorklet.addModule(workletUrl);
 
             // Generate the prompt from the quiz
             const questionsJson = JSON.stringify(quiz.questions.map((q, i) => ({
@@ -62,7 +131,7 @@ INSTRUCTIONS:
 7. Keep the conversation flowing naturally. If they ask a clarifying question, answer it quickly but bring them back to the quiz.
 8. Once all questions are answered, congratulate them and summarize their performance.`;
 
-            const session = await ai.live.connect({
+            const sessionPromise = ai.live.connect({
                 model: 'gemini-2.5-flash-native-audio-preview-09-2025',
                 config: {
                     responseModalities: [Modality.AUDIO],
@@ -78,12 +147,53 @@ INSTRUCTIONS:
                     }
                 },
                 callbacks: {
-                    onopen: () => console.log("Live AI Session Opened"),
+                    onopen: async () => {
+                        console.log("Live AI Session Opened");
+                        isConnectedRef.current = true;
+                        onStateChange?.('connected');
+
+                        try {
+                            mediaStreamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+                            if (!audioContextRef.current) return;
+
+                            sourceNodeRef.current = audioContextRef.current.createMediaStreamSource(mediaStreamRef.current);
+                            workletNodeRef.current = new AudioWorkletNode(audioContextRef.current, 'recorder-worklet');
+
+                            workletNodeRef.current.port.onmessage = (event) => {
+                                if (isMuted || !isConnectedRef.current) return;
+
+                                const inputData = event.data;
+                                const pcm16 = floatTo16BitPCM(inputData);
+                                const base64Data = arrayBufferToBase64(pcm16);
+
+                                sessionPromise.then(session => {
+                                    if (!isConnectedRef.current || !session) return;
+                                    try {
+                                        session.sendRealtimeInput({ media: { mimeType: "audio/pcm;rate=16000", data: base64Data } });
+                                    } catch (err) {
+                                        if (isConnectedRef.current) console.warn("Socket send error:", err);
+                                    }
+                                });
+                            };
+
+                            sourceNodeRef.current.connect(workletNodeRef.current);
+                            // We don't connect worklet to destination to avoid mic feedback loop
+                            workletNodeRef.current.connect(audioContextRef.current.destination);
+
+                        } catch (micError) {
+                            console.error("Microphone access denied", micError);
+                            isConnectedRef.current = false;
+                            onStateChange?.('error');
+                            onError?.(new Error("Microphone access denied or unavailable. Please allow microphone permissions to use the Live Quiz Master."));
+                        }
+                    },
                     onmessage: (message: LiveServerMessage) => {
+                        if (!isConnectedRef.current) return;
                         if (message.serverContent?.modelTurn?.parts) {
                             for (const part of message.serverContent.modelTurn.parts) {
                                 if (part.inlineData && part.inlineData.data) {
-                                    handleIncomingAudio(part.inlineData.data, audioContext);
+                                    handleIncomingAudio(part.inlineData.data, audioContextRef.current!);
                                 }
                             }
                         }
@@ -99,84 +209,12 @@ INSTRUCTIONS:
                 }
             });
 
+            const session = await sessionPromise;
             sessionRef.current = session;
-
-            // Setup audio input (Microphone)
-            let stream;
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                        channelCount: 1,
-                        sampleRate: 16000,
-                    }
-                });
-                mediaStreamRef.current = stream;
-            } catch (mediaErr) {
-                throw new Error("Microphone access denied or unavailable. Please allow microphone permissions to use the Live Quiz Master.");
-            }
-
-            // We need a custom AudioWorklet to capture raw PCM audio chunks.
-            // Since we can't easily load external files in a generic way, we create a blob URL inline.
-            const workletCode = `
-                class PCMProcessor extends AudioWorkletProcessor {
-                    process(inputs) {
-                        const inputChannel = inputs[0][0];
-                        if (inputChannel) {
-                            // Convert float32 to int16
-                            const pcm16 = new Int16Array(inputChannel.length);
-                            for (let i = 0; i < inputChannel.length; i++) {
-                                pcm16[i] = Math.max(-1, Math.min(1, inputChannel[i])) * 32767;
-                            }
-                            this.port.postMessage(pcm16.buffer);
-                        }
-                        return true;
-                    }
-                }
-                registerProcessor('pcm-processor', PCMProcessor);
-            `;
-            const blob = new Blob([workletCode], { type: 'application/javascript' });
-            const workletUrl = URL.createObjectURL(blob);
-
-            // To process mic at exactly 16000, we create a separate context just for input
-            const inputAudioContext = new AudioContextClass({ sampleRate: 16000 });
-            await inputAudioContext.audioWorklet.addModule(workletUrl);
-
-            const source = inputAudioContext.createMediaStreamSource(stream);
-            const workletNode = new AudioWorkletNode(inputAudioContext, 'pcm-processor');
-            workletNodeRef.current = workletNode;
-
-            workletNode.port.onmessage = (event) => {
-                if (!sessionRef.current || isMuted) return;
-
-                // Convert ArrayBuffer to Base64
-                const buffer = event.data;
-                const bytes = new Uint8Array(buffer);
-                let binary = '';
-                for (let i = 0; i < bytes.byteLength; i++) {
-                    binary += String.fromCharCode(bytes[i]);
-                }
-                const base64Data = btoa(binary);
-
-                // Send to Gemini
-                try {
-                    sessionRef.current.sendRealtimeInput([{
-                        mimeType: "audio/pcm;rate=16000",
-                        data: base64Data
-                    }]);
-                } catch (e) {
-                    console.error("Error sending audio chunk", e);
-                }
-            };
-
-            source.connect(workletNode);
-            // Worklet node is NOT connected to destination to avoid feedback loop
-
-            // Messages are now handled entirely by the onmessage callback.
-
-            onStateChange?.('connected');
 
         } catch (error: any) {
             console.error("Connection failed:", error);
+            isConnectedRef.current = false;
             onError?.(error);
             onStateChange?.('error');
             handleDisconnect();
@@ -185,13 +223,8 @@ INSTRUCTIONS:
 
     const handleIncomingAudio = useCallback((base64Data: string, audioContext: AudioContext) => {
         try {
-            const binaryString = atob(base64Data);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
-
-            const pcmData = new Int16Array(bytes.buffer);
+            const audioBytes = base64ToUint8Array(base64Data);
+            const pcmData = new Int16Array(audioBytes.buffer);
             const floatData = new Float32Array(pcmData.length);
             for (let i = 0; i < pcmData.length; i++) {
                 floatData[i] = pcmData[i] / 32768.0;
@@ -204,33 +237,41 @@ INSTRUCTIONS:
             source.buffer = audioBuffer;
             source.connect(audioContext.destination);
 
-            // Queueing logic to prevent overlapping audio
             const currentTime = audioContext.currentTime;
-            if (nextStartTimeRef.current < currentTime) {
-                nextStartTimeRef.current = currentTime;
-            }
-            source.start(nextStartTimeRef.current);
-            nextStartTimeRef.current += audioBuffer.duration;
+            const startTime = Math.max(currentTime, nextStartTimeRef.current);
+
+            source.start(startTime);
+            nextStartTimeRef.current = startTime + audioBuffer.duration;
+
         } catch (e) {
             console.error("Error decoding audio", e);
         }
     }, []);
 
     const handleDisconnect = useCallback(() => {
+        isConnectedRef.current = false;
+
         if (sessionRef.current) {
-            // Close connection if sdk supports a close method, or just discard
+            try { sessionRef.current.close(); } catch (e) {}
             sessionRef.current = null;
         }
         if (workletNodeRef.current) {
-            workletNodeRef.current.disconnect();
+            try {
+                workletNodeRef.current.port.postMessage("stop");
+                workletNodeRef.current.disconnect();
+            } catch (e) {}
             workletNodeRef.current = null;
+        }
+        if (sourceNodeRef.current) {
+            try { sourceNodeRef.current.disconnect(); } catch (e) {}
+            sourceNodeRef.current = null;
         }
         if (mediaStreamRef.current) {
             mediaStreamRef.current.getTracks().forEach(track => track.stop());
             mediaStreamRef.current = null;
         }
         if (audioContextRef.current) {
-            audioContextRef.current.close();
+            try { audioContextRef.current.close(); } catch (e) {}
             audioContextRef.current = null;
         }
         onStateChange?.('disconnected');
