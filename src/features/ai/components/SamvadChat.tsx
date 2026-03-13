@@ -427,7 +427,6 @@ export const SamvadChat: React.FC<SamvadChatProps> = ({ isOpen, onClose, figureI
 
               userAnalyserRef.current = audioContextRef.current.createAnalyser();
               userAnalyserRef.current.fftSize = 64; // Smaller FFT for fewer, chunkier bars
-              sourceNodeRef.current.connect(userAnalyserRef.current);
 
               workletNodeRef.current = new AudioWorkletNode(audioContextRef.current, 'recorder-worklet');
 
@@ -454,8 +453,13 @@ export const SamvadChat: React.FC<SamvadChatProps> = ({ isOpen, onClose, figureI
                 });
               };
 
+              // Connect microphone to visualizer
               sourceNodeRef.current.connect(userAnalyserRef.current);
+
+              // Connect microphone to worklet for streaming
               sourceNodeRef.current.connect(workletNodeRef.current);
+
+              // Connect worklet to destination to keep it active (it returns true in process but doesn't output audio data to avoid feedback loop)
               workletNodeRef.current.connect(audioContextRef.current.destination);
 
             } catch (micError) {
@@ -523,7 +527,7 @@ export const SamvadChat: React.FC<SamvadChatProps> = ({ isOpen, onClose, figureI
     }
   };
 
-  const playAudioChunk = async (base64Audio: string) => {
+const playAudioChunk = async (base64Audio: string) => {
     if (!audioContextRef.current || !isConnectedRef.current) return;
 
     try {
@@ -540,21 +544,23 @@ export const SamvadChat: React.FC<SamvadChatProps> = ({ isOpen, onClose, figureI
       const source = audioContextRef.current.createBufferSource();
       source.buffer = audioBuffer;
 
-      // Ensure analyser belongs to current context (Safeguard against 'different audio context' error)
+      // Setup analyser for visualizer
       if (!aiAnalyserRef.current || aiAnalyserRef.current.context !== audioContextRef.current) {
         aiAnalyserRef.current = audioContextRef.current.createAnalyser();
         aiAnalyserRef.current.fftSize = 64;
         aiAnalyserRef.current.smoothingTimeConstant = 0.6;
-
-        // Fix for low volume: Add a GainNode
-        const gainNode = audioContextRef.current.createGain();
-        gainNode.gain.value = 2.5; // Boost volume by 2.5x
-
-        aiAnalyserRef.current.connect(gainNode);
-        gainNode.connect(audioContextRef.current.destination);
       }
 
+      // Connect source to analyser for visualizer
       source.connect(aiAnalyserRef.current);
+
+      // Create a gain node to boost volume slightly
+      const gainNode = audioContextRef.current.createGain();
+      gainNode.gain.value = 2.5;
+
+      // Connect the source -> gain -> destination so we can hear it
+      source.connect(gainNode);
+      gainNode.connect(audioContextRef.current.destination);
 
       const currentTime = audioContextRef.current.currentTime;
       const startTime = Math.max(currentTime, nextStartTimeRef.current);
