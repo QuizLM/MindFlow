@@ -107,29 +107,9 @@ export const useGenAILive = ({ quiz, voice, onStateChange, onError }: UseGenAILi
             await audioContext.audioWorklet.addModule(workletUrl);
 
             // Generate the prompt from the quiz
-            const questionsJson = JSON.stringify(quiz.questions.map((q, i) => ({
-                id: i + 1,
-                question: q.question,
-                options: q.options,
-                answer: q.correct,
-                explanation: q.explanation.summary || q.explanation.analysis_correct || "No explanation available"
-            })));
 
-            const systemInstruction = `You are a lively, encouraging, and highly intelligent Quiz Master running a live audio quiz game.
-Your persona is enthusiastic and supportive.
-You are testing the user on the following quiz titled "${quiz.name}".
-Here is the strict list of questions, options, correct answers, and explanations:
-${questionsJson}
 
-INSTRUCTIONS:
-1. When the user first says hello or asks to start, enthusiastically welcome them to the "${quiz.name}" quiz and ask Question 1.
-2. Read the question clearly, followed by the options if necessary.
-3. Wait for the user to answer.
-4. When the user answers, tell them if they are right or wrong immediately.
-5. Provide a brief, interesting explanation based on the 'explanation' field.
-6. Move smoothly to the next question.
-7. Keep the conversation flowing naturally. If they ask a clarifying question, answer it quickly but bring them back to the quiz.
-8. Once all questions are answered, congratulate them and summarize their performance.`;
+            const systemInstruction = "You are a lively Quiz Master running an audio game. Keep it short and friendly.";
 
             const sessionPromise = ai.live.connect({
                 model: 'gemini-2.5-flash-native-audio-preview-09-2025',
