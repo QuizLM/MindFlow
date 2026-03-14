@@ -110,7 +110,7 @@ export const AITalkPage: React.FC = () => {
     }
 
     return (
-        <div className="min-h-[100dvh] bg-stone-900 flex flex-col items-center justify-between p-4 animate-fade-in relative overflow-hidden font-sans">
+        <div className="h-full w-full bg-stone-900 flex flex-col items-center justify-between p-4 animate-fade-in relative overflow-hidden font-sans">
 
             {/* Ambient Background Glow based on state */}
             <div className={cn(
