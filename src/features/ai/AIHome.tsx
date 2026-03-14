@@ -52,9 +52,13 @@ export const AIHome: React.FC = () => {
     const navigate = useNavigate();
     const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-    const handleFeatureClick = (featureName: string) => {
-        setToastMessage(`"${featureName}" is coming soon!`);
-        setTimeout(() => setToastMessage(null), 3000);
+    const handleFeatureClick = (featureId: string, featureName: string) => {
+        if (featureId === 'chat') {
+            navigate('/ai/chat');
+        } else {
+            setToastMessage(`"${featureName}" is coming soon!`);
+            setTimeout(() => setToastMessage(null), 3000);
+        }
     };
 
     const aiFeatures = [
@@ -128,7 +132,7 @@ export const AIHome: React.FC = () => {
                             description={feature.description}
                             icon={feature.icon}
                             colorClass={cn("border", feature.bgClass, feature.borderClass)}
-                            onClick={() => handleFeatureClick(feature.title)}
+                            onClick={() => handleFeatureClick(feature.id, feature.title)}
                             badgeText={feature.badgeText}
                         />
                     ))}

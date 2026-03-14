@@ -21,7 +21,9 @@
     "react-easy-crop": "^5.5.5",
     "react-icons": "^5.5.0",
     "react-latex-next": "^3.0.0",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^7.9.6",
+    "remark-gfm": "^4.0.1",
     "uuid": "^13.0.0",
     "workbox-window": "^7.0.0",
     "zustand": "^5.0.11"
