@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mic, MicOff, ArrowLeft, Loader2, AlertCircle, Volume2, Settings2, User, PhoneOff } from 'lucide-react';
+import { Mic, MicOff, ArrowLeft, Loader2, AlertCircle, Volume2, User, PhoneOff, Settings2, Captions, ChevronDown } from 'lucide-react';
 import { cn } from '../../../utils/cn';
 import { useLiveAPI, VoicePersonality } from './useLiveAPI';
+import { VoiceBlobVisualizer } from './VoiceBlobVisualizer';
+import { AITalkSummary } from './AITalkSummary';
 
 export const AITalkPage: React.FC = () => {
     const navigate = useNavigate();
@@ -10,25 +12,41 @@ export const AITalkPage: React.FC = () => {
         connectionState,
         agentState,
         errorMsg,
-        volumeLevel,
+        userAnalyser,
+        aiAnalyser,
         isMuted,
         voiceName,
+        topic,
+        currentSubtitle,
+        transcript,
         connect,
         disconnect,
         toggleMute,
-        changeVoice
+        changeVoice,
+        changeTopic
     } = useLiveAPI();
 
-    // Timer logic
+    // UI States
     const [secondsElapsed, setSecondsElapsed] = useState(0);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const [showSubtitles, setShowSubtitles] = useState(true);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [sessionEnded, setSessionEnded] = useState(false);
+    const finalDurationRef = useRef(0);
 
     useEffect(() => {
         if (connectionState === 'connected') {
+            setSessionEnded(false);
             setSecondsElapsed(0);
             timerRef.current = setInterval(() => {
                 setSecondsElapsed(prev => prev + 1);
             }, 1000);
+        } else if (connectionState === 'disconnected' && secondsElapsed > 0 && !errorMsg) {
+             // Successfully ended a session that lasted > 0s
+             finalDurationRef.current = secondsElapsed;
+             setSessionEnded(true);
+             if (timerRef.current) clearInterval(timerRef.current);
+             setSecondsElapsed(0);
         } else {
             if (timerRef.current) clearInterval(timerRef.current);
             setSecondsElapsed(0);
@@ -52,48 +70,58 @@ export const AITalkPage: React.FC = () => {
         }
     };
 
+    const handleRestart = () => {
+        setSessionEnded(false);
+        setSecondsElapsed(0);
+    };
+
     const getStatusText = () => {
         if (connectionState === 'error') return 'Connection Error';
         if (connectionState === 'connecting') return 'Connecting...';
         if (connectionState === 'connected') {
             if (agentState === 'speaking') return 'AI is speaking...';
-            if (agentState === 'listening') return isMuted ? 'Muted' : 'Listening...';
+            if (agentState === 'listening') return isMuted ? 'Microphone Muted' : 'Listening...';
             return 'Ready';
         }
         return 'Tap to Start';
     };
 
-    // Calculate dynamic scale and opacity based on volumeLevel
-    // Volume level ranges from 0.0 to ~1.0
-    const ring1Scale = 1 + (volumeLevel * 0.3);
-    const ring2Scale = 1 + (volumeLevel * 0.6);
-    const ring3Scale = 1 + (volumeLevel * 0.9);
-
-    // The base color changes based on who is active
     const isActiveSpeaking = agentState === 'speaking';
-    const orbColorClass = isActiveSpeaking
-        ? "bg-indigo-500 shadow-indigo-500/50"
-        : (isMuted ? "bg-red-500 shadow-red-500/50" : "bg-emerald-500 shadow-emerald-500/50");
 
-    const ringColorClass = isActiveSpeaking
-        ? "border-indigo-500"
-        : (isMuted ? "border-red-500" : "border-emerald-500");
+    const topics = [
+        'Casual Conversation',
+        'Job Interview Practice',
+        'IELTS Speaking Test',
+        'Debate Mode',
+        'Vocabulary Building'
+    ];
 
     const voices: VoicePersonality[] = ['Aoede', 'Puck', 'Fenrir', 'Kore'];
 
+    if (sessionEnded) {
+        return (
+            <AITalkSummary
+                duration={finalDurationRef.current}
+                transcript={transcript}
+                topic={topic}
+                onRestart={handleRestart}
+            />
+        );
+    }
+
     return (
-        <div className="min-h-[100dvh] bg-stone-900 flex flex-col items-center justify-between p-4 animate-fade-in relative overflow-hidden">
+        <div className="min-h-[100dvh] bg-stone-900 flex flex-col items-center justify-between p-4 animate-fade-in relative overflow-hidden font-sans">
 
             {/* Ambient Background Glow based on state */}
             <div className={cn(
-                "absolute inset-0 opacity-20 transition-all duration-1000 ease-in-out pointer-events-none",
-                isActiveSpeaking ? "bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-500 via-stone-900 to-stone-900" :
-                (connectionState === 'connected' && !isMuted) ? "bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-500 via-stone-900 to-stone-900" :
+                "absolute inset-0 opacity-30 transition-all duration-1000 ease-in-out pointer-events-none",
+                isActiveSpeaking ? "bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-500/50 via-stone-900 to-stone-900" :
+                (connectionState === 'connected' && !isMuted) ? "bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-500/40 via-stone-900 to-stone-900" :
                 "bg-stone-900"
             )} />
 
             {/* Header */}
-            <header className="w-full max-w-2xl mx-auto flex items-center justify-between mt-2 z-10">
+            <header className="w-full max-w-2xl mx-auto flex items-center justify-between mt-2 z-20">
                 <button
                     onClick={() => {
                         disconnect();
@@ -105,28 +133,62 @@ export const AITalkPage: React.FC = () => {
                     <ArrowLeft className="w-6 h-6" />
                 </button>
 
-                {/* Voice Selector Pill */}
+                {/* Options Menu Toggle */}
                 {connectionState !== 'connected' && connectionState !== 'connecting' && (
-                    <div className="flex bg-stone-800 rounded-full p-1 border border-stone-700 shadow-inner">
-                        {voices.map(v => (
-                            <button
-                                key={v}
-                                onClick={() => changeVoice(v)}
-                                className={cn(
-                                    "px-3 py-1.5 rounded-full text-[10px] font-bold uppercase transition-all duration-300",
-                                    voiceName === v ? "bg-stone-600 text-white shadow-md" : "text-stone-400 hover:text-stone-300"
-                                )}
-                            >
-                                {v}
-                            </button>
-                        ))}
-                    </div>
+                     <div className="relative">
+                        <button
+                            onClick={() => setIsMenuOpen(!isMenuOpen)}
+                            className="flex items-center gap-2 bg-stone-800 border border-stone-700 hover:bg-stone-700 px-4 py-2 rounded-full text-sm font-medium text-stone-300 transition-colors shadow-lg"
+                        >
+                            <Settings2 className="w-4 h-4" />
+                            Settings
+                        </button>
+
+                        {/* Dropdown Menu */}
+                        {isMenuOpen && (
+                            <div className="absolute top-12 left-1/2 -translate-x-1/2 w-64 bg-stone-800 border border-stone-700 rounded-xl shadow-2xl p-4 flex flex-col gap-4 animate-in fade-in slide-in-from-top-2">
+                                {/* Topic Select */}
+                                <div>
+                                    <label className="text-xs font-bold text-stone-500 uppercase tracking-wider mb-2 block">Topic Mode</label>
+                                    <div className="relative">
+                                        <select
+                                            value={topic}
+                                            onChange={(e) => changeTopic(e.target.value)}
+                                            className="w-full appearance-none bg-stone-900 border border-stone-700 text-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                        >
+                                            {topics.map(t => <option key={t} value={t}>{t}</option>)}
+                                        </select>
+                                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-500 pointer-events-none" />
+                                    </div>
+                                </div>
+
+                                {/* Voice Select */}
+                                <div>
+                                    <label className="text-xs font-bold text-stone-500 uppercase tracking-wider mb-2 block">AI Voice</label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {voices.map(v => (
+                                            <button
+                                                key={v}
+                                                onClick={() => changeVoice(v)}
+                                                className={cn(
+                                                    "px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all duration-300 border",
+                                                    voiceName === v ? "bg-stone-700 border-stone-600 text-white shadow-inner" : "bg-stone-900 border-stone-800 text-stone-400 hover:border-stone-700"
+                                                )}
+                                            >
+                                                {v}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                     </div>
                 )}
 
-                <div className="w-12" /> {/* Spacer for centering */}
+                <div className="w-12" /> {/* Spacer */}
             </header>
 
-            {/* Top Status Indicator (Live Pill) */}
+            {/* Top Status Indicator */}
             <div className="absolute top-24 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 z-10 w-full max-w-md px-4">
                 {connectionState === 'connected' ? (
                      <div className="flex items-center gap-2 bg-stone-800/80 backdrop-blur-md border border-stone-700 px-4 py-2 rounded-full shadow-lg">
@@ -142,13 +204,13 @@ export const AITalkPage: React.FC = () => {
                         <span>{errorMsg || 'Connection failed'}</span>
                     </div>
                 ) : (
-                    <div className="text-stone-400 text-sm tracking-widest uppercase font-bold">
-                         AI Live Conversation
+                    <div className="text-stone-400 text-sm tracking-widest uppercase font-bold text-center">
+                         {topic}
                     </div>
                 )}
 
                 <div className={cn(
-                    "text-lg font-medium transition-colors duration-300 h-8 mt-4",
+                    "text-lg font-medium transition-colors duration-300 h-8 mt-2",
                     connectionState === 'connected' ? (isActiveSpeaking ? "text-indigo-400 animate-pulse" : (isMuted ? "text-red-400" : "text-emerald-400")) : "text-stone-500"
                 )}>
                     {getStatusText()}
@@ -157,94 +219,115 @@ export const AITalkPage: React.FC = () => {
 
             {/* Main Visualizer Avatar Area */}
             <div className="flex-1 flex flex-col items-center justify-center w-full max-w-md relative z-10 my-20">
-                <div className="relative flex items-center justify-center">
 
-                    {/* Visualizer Rings */}
-                    {connectionState === 'connected' && (
-                        <>
-                            <div
-                                className={cn(
-                                    "absolute w-32 h-32 rounded-full border-2 opacity-40 transition-transform duration-75 ease-out will-change-transform",
-                                    ringColorClass
-                                )}
-                                style={{ transform: `scale(${ring1Scale})` }}
-                            />
-                            <div
-                                className={cn(
-                                    "absolute w-32 h-32 rounded-full border opacity-20 transition-transform duration-100 ease-out will-change-transform",
-                                    ringColorClass
-                                )}
-                                style={{ transform: `scale(${ring2Scale})` }}
-                            />
-                            <div
-                                className={cn(
-                                    "absolute w-32 h-32 rounded-full border opacity-10 transition-transform duration-150 ease-out will-change-transform",
-                                    ringColorClass
-                                )}
-                                style={{ transform: `scale(${ring3Scale})` }}
-                            />
-                        </>
-                    )}
+                <div className="relative flex items-center justify-center w-64 h-64">
+                    {/* HTML5 Canvas Dynamic Blob Visualizer */}
+                    <VoiceBlobVisualizer
+                        userAnalyser={userAnalyser}
+                        aiAnalyser={aiAnalyser}
+                        agentState={agentState}
+                        connectionState={connectionState}
+                        isMuted={isMuted}
+                    />
 
-                    {/* Main Avatar / Connect Button */}
+                    {/* Main Avatar / Connect Button - layered over canvas */}
                     <button
                         onClick={connectionState !== 'connected' ? handleToggleConnection : undefined}
                         disabled={connectionState === 'connecting'}
                         className={cn(
-                            "relative z-10 w-32 h-32 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 transform border-4 border-stone-800",
+                            "relative z-20 w-32 h-32 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 transform border-4 border-stone-800/80 backdrop-blur-sm",
                             connectionState === 'idle' || connectionState === 'disconnected' || connectionState === 'error'
-                                ? "bg-emerald-600 hover:bg-emerald-500 hover:scale-105 cursor-pointer"
+                                ? "bg-stone-800 hover:bg-stone-700 hover:scale-105 cursor-pointer text-stone-300"
                                 : connectionState === 'connecting'
-                                ? "bg-stone-700 scale-95 cursor-wait"
-                                : `${orbColorClass} scale-100 cursor-default`
+                                ? "bg-stone-800 scale-95 cursor-wait"
+                                : isActiveSpeaking
+                                ? "bg-indigo-600/20 text-indigo-100 scale-100 cursor-default border-indigo-500/30"
+                                : isMuted ? "bg-red-600/20 text-red-100 border-red-500/30" : "bg-emerald-600/20 text-emerald-100 border-emerald-500/30"
                         )}
                     >
                         {connectionState === 'connecting' ? (
-                            <Loader2 className="w-12 h-12 text-white animate-spin" />
+                            <Loader2 className="w-12 h-12 animate-spin text-stone-400" />
                         ) : connectionState === 'connected' ? (
                             isActiveSpeaking ? (
-                                <User className="w-12 h-12 text-white opacity-90" />
+                                <User className="w-12 h-12 opacity-90" />
                             ) : (
-                                <Mic className="w-12 h-12 text-white opacity-90" />
+                                <Mic className="w-12 h-12 opacity-90" />
                             )
                         ) : (
-                            <Mic className="w-12 h-12 text-white" />
+                            <Mic className="w-12 h-12" />
                         )}
                     </button>
                 </div>
             </div>
 
+            {/* Subtitles Overlay */}
+            <div className="w-full max-w-lg px-6 min-h-[80px] mb-8 flex items-end justify-center z-20 pointer-events-none">
+                 {showSubtitles && currentSubtitle && connectionState === 'connected' && (
+                     <div className="bg-black/60 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/10 text-center animate-in fade-in slide-in-from-bottom-2 shadow-2xl max-w-full">
+                         <p className="text-white text-lg font-medium leading-relaxed drop-shadow-md">
+                             {currentSubtitle}
+                         </p>
+                     </div>
+                 )}
+            </div>
+
             {/* Bottom Controls */}
-            <div className="w-full max-w-md pb-12 z-10 flex flex-col items-center gap-6">
+            <div className="w-full max-w-md pb-8 z-20 flex flex-col items-center gap-6">
                  {connectionState === 'connected' ? (
-                    <div className="flex items-center justify-center gap-8 w-full px-8 animate-fade-in-up">
+                    <div className="flex items-center justify-center gap-6 w-full px-4 animate-in fade-in slide-in-from-bottom-4">
+
+                        {/* CC Toggle */}
+                        <button
+                            onClick={() => setShowSubtitles(!showSubtitles)}
+                            className={cn(
+                                "p-4 rounded-full transition-all duration-200 shadow-lg",
+                                showSubtitles
+                                    ? 'bg-stone-800 text-indigo-400 border border-indigo-900/50 hover:bg-stone-700'
+                                    : 'bg-stone-800 text-stone-500 border border-stone-700 hover:bg-stone-700 hover:text-stone-300'
+                            )}
+                            title={showSubtitles ? "Hide Subtitles" : "Show Subtitles"}
+                        >
+                            <Captions className="w-6 h-6" />
+                        </button>
+
+                        {/* End Call Button */}
+                        <button
+                            onClick={handleToggleConnection}
+                            className="p-6 bg-red-600 hover:bg-red-500 text-white rounded-full shadow-lg hover:shadow-red-900/50 transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center border-4 border-stone-900"
+                            title="End Conversation"
+                        >
+                            <PhoneOff className="w-8 h-8" />
+                        </button>
+
                         {/* Mute Button */}
                         <button
                             onClick={toggleMute}
                             className={cn(
-                                "p-5 rounded-full transition-all duration-200 ring-2 shadow-lg",
+                                "p-4 rounded-full transition-all duration-200 shadow-lg border",
                                 isMuted
-                                    ? 'bg-stone-800 text-red-400 ring-red-900/50 hover:bg-stone-700'
-                                    : 'bg-stone-800 text-white hover:bg-stone-700 ring-stone-700'
+                                    ? 'bg-red-950/50 text-red-400 border-red-900/50 hover:bg-red-900/50'
+                                    : 'bg-stone-800 text-emerald-400 border-emerald-900/30 hover:bg-stone-700 hover:text-emerald-300'
                             )}
                             title={isMuted ? "Unmute Microphone" : "Mute Microphone"}
                         >
                             {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
                         </button>
 
-                        {/* End Call Button */}
-                        <button
-                            onClick={handleToggleConnection}
-                            className="p-5 bg-red-600 hover:bg-red-500 text-white rounded-full shadow-lg hover:shadow-red-900/50 transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center"
-                            title="End Conversation"
-                        >
-                            <PhoneOff className="w-6 h-6" />
-                        </button>
                     </div>
                  ) : (
-                    <p className="text-center text-sm text-stone-500 max-w-[250px] font-medium">
-                        Tap the microphone to start talking to MindFlow AI.
-                    </p>
+                    <>
+                    <button
+                        onClick={handleToggleConnection}
+                        className="bg-emerald-600 text-white font-bold text-lg px-8 py-4 rounded-full shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] transition-all hover:-translate-y-1 active:translate-y-0 w-full max-w-[280px]"
+                    >
+                        Start Conversation
+                    </button>
+                    {connectionState !== 'error' && (
+                        <p className="text-center text-sm text-stone-500 max-w-[250px] font-medium mt-2 animate-pulse">
+                            Microphone test is active. Speak to test levels.
+                        </p>
+                    )}
+                    </>
                  )}
             </div>
         </div>
