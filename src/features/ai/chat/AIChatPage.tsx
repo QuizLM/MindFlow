@@ -6,6 +6,7 @@ import html2canvas from 'html2canvas';
 import { ChatMessage } from './ChatMessage';
 import { ChatInput } from './ChatInput';
 import { useAIChat, AI_PERSONAS } from './useAIChat';
+import { MODEL_CONFIGS } from './useQuota';
 import { cn } from '../../../utils/cn';
 import { AIChatConversation } from '../../../lib/db';
 
@@ -24,7 +25,10 @@ export const AIChatPage: React.FC = () => {
         activePersona,
         setActivePersona,
         includeAppData,
-        setIncludeAppData
+        setIncludeAppData,
+        activeModel,
+        setActiveModel,
+        quota
     } = useAIChat();
 
     const [inputValue, setInputValue] = useState('');
@@ -268,10 +272,10 @@ export const AIChatPage: React.FC = () => {
                                 className="bg-transparent font-semibold text-gray-900 dark:text-white border-0 outline-none focus:ring-0 p-0 text-base"
                             >
                                 {Object.values(AI_PERSONAS).map(p => (
-                                    <option key={p.id} value={p.id} className="text-gray-900 dark:text-white bg-white dark:bg-slate-900">
-                                        {p.name}
-                                    </option>
-                                ))}
+    <option key={p.id} value={p.id} className="text-gray-900 dark:text-white bg-white dark:bg-slate-900">
+        {p.name}
+    </option>
+))}
                             </select>
                         </div>
 
