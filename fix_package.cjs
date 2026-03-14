@@ -1,4 +1,14 @@
-{
+const fs = require('fs');
+const path = 'package.json';
+
+let data = fs.readFileSync(path, 'utf8');
+
+data = data.replace(/<<<<<<< HEAD[\s\S]*?react-router-dom[\s\S]*?=======/g, '');
+data = data.replace(/>>>>>>> [^\n]+\n/g, '');
+data = data.replace(/<<<<<<< HEAD\n/g, '');
+data = data.replace(/=======\n/g, '');
+
+const finalPkg = `{
   "name": "mindflow-quiz",
   "private": true,
   "version": "0.0.0",
@@ -47,7 +57,6 @@
     "@types/node": "^22.14.0",
     "@types/react": "^19.2.6",
     "@types/react-dom": "^19.2.3",
-    "@types/react-syntax-highlighter": "^15.5.13",
     "@vitejs/plugin-react": "^5.0.0",
     "html2canvas": "^1.4.1",
     "jsdom": "^27.4.0",
@@ -57,4 +66,7 @@
     "vite-plugin-pwa": "^1.1.0",
     "vitest": "^4.0.13"
   }
-}
+}`;
+
+fs.writeFileSync(path, finalPkg);
+console.log('Fixed package.json');
