@@ -63,10 +63,17 @@ Your goal is to help the user expand their English vocabulary, master synonyms, 
 
 type PersonaId = keyof typeof AI_PERSONAS;
 
+const SYSTEM_PROMPT = `You are MindFlow AI, a highly adaptive, knowledgeable, and helpful assistant.
+Your goal is to assist the user by automatically adapting your tone, expertise, and teaching style based on their query and the conversation history.
+If they ask about grammar, act as a strict grammar coach.
+If they want to practice for an interview, act as a tough but fair interviewer.
+If they ask about general topics, be an encouraging educational assistant.
+- Keep answers concise but informative.
+- Use markdown formatting for readability.
+- Maintain context of the conversation to provide the best possible response.`;
 
 export const useAIChat = () => {
     const [messages, setMessages] = useState<AIChatMessage[]>([]);
-    const [activePersona, setActivePersona] = useState<PersonaId>('general');
     const [activeModel, setActiveModel] = useState<ModelId>('gemini-2.5-flash');
     const quota = useQuota(activeModel);
     const [includeAppData, setIncludeAppData] = useState(false);
@@ -130,9 +137,13 @@ export const useAIChat = () => {
         const apiKey = process.env.GOOGLE_AI_KEY || process.env.GEMINI_API_KEY || process.env.API_KEY;
         if (!apiKey) return;
 
+
+        // Always use the model with the highest quota for background title generation to save active model quota
+        const titleModel = 'gemini-3.1-flash-lite-preview';
+
         try {
             const response = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/${String(activeModel).startsWith('gemini') ? activeModel : 'gemini-2.5-flash'}:generateContent?key=${apiKey}`,
+                `https://generativelanguage.googleapis.com/v1beta/models/${titleModel}:generateContent?key=${apiKey}`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -294,7 +305,7 @@ export const useAIChat = () => {
                 parts: userParts
             });
 
-            let finalSystemPrompt = AI_PERSONAS[activePersona].prompt;
+            let finalSystemPrompt = SYSTEM_PROMPT;
 
             if (includeAppData && stats) {
                 const contextStr = `\n\nUSER PROFILE CONTEXT:\nThe user has completed ${stats.quizzesCompleted} quizzes.\nTotal Correct: ${stats.correctAnswers}\nAverage Score: ${Math.round(stats.averageScore)}%\nWeak Topics: ${stats.weakTopics.join(', ')}\nUse this context to personalize your advice and point out areas of improvement if relevant.`;
@@ -384,7 +395,7 @@ export const useAIChat = () => {
             abortControllerRef.current = null;
         }
 
-    }, [messages, currentConversationId, conversations, activeModel, activePersona, includeAppData, stats, quota]);
+    }, [messages, currentConversationId, conversations, activeModel, includeAppData, stats, quota]);
 
     return {
         messages,
@@ -396,8 +407,6 @@ export const useAIChat = () => {
         loadConversation,
         deleteConversation,
         stopGenerating,
-        activePersona,
-        setActivePersona,
         includeAppData,
         setIncludeAppData,
         activeModel,
