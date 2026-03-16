@@ -87,9 +87,9 @@ export const useAIChat = () => {
         const apiKey = process.env.GOOGLE_AI_KEY || process.env.GEMINI_API_KEY || process.env.API_KEY;
         if (!apiKey) return;
 
-        // Find a model that is different from the active model to save quota
-        const availableModels = Object.values(MODEL_CONFIGS).map(m => m.id);
-        let titleModel = availableModels.find(id => id !== activeModel) || 'gemini-2.5-flash';
+
+        // Always use the model with the highest quota for background title generation to save active model quota
+        const titleModel = 'gemini-3.1-flash-lite-preview';
 
         try {
             const response = await fetch(
