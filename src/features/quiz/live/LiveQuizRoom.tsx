@@ -96,7 +96,7 @@ export const LiveQuizRoom: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-stone-950">
+            <div className="flex items-center justify-center min-h-[100dvh] bg-stone-950">
                 <Loader2 className="animate-spin h-12 w-12 text-indigo-500" />
             </div>
         );
@@ -107,7 +107,7 @@ export const LiveQuizRoom: React.FC = () => {
     const VOICES: VoicePersonality[] = ['Aoede', 'Charon', 'Fenrir', 'Kore', 'Puck'];
 
     return (
-        <div className="flex flex-col h-screen bg-stone-950 text-stone-100 overflow-hidden relative font-sans">
+        <div className="flex flex-col h-[100dvh] bg-stone-950 text-stone-100 overflow-hidden relative font-sans">
             {/* Background Effects */}
             <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
                 <div className={cn(
@@ -194,7 +194,7 @@ export const LiveQuizRoom: React.FC = () => {
             </div>
 
             {/* Main Visualizer Avatar Area */}
-            <div className="flex-1 flex flex-col items-center justify-center w-full max-w-md mx-auto relative z-10 mb-10 mt-5">
+            <div className="flex-1 flex flex-col items-center justify-center w-full max-w-md mx-auto relative z-10 mb-6 mt-4">
                 <div className="relative flex items-center justify-center w-64 h-64">
                     {/* HTML5 Canvas Dynamic Blob Visualizer */}
                     <VoiceBlobVisualizer
@@ -236,7 +236,7 @@ export const LiveQuizRoom: React.FC = () => {
             </div>
 
             {/* Subtitles Overlay */}
-            <div className="w-full max-w-lg mx-auto px-6 min-h-[80px] mb-4 flex flex-col items-center justify-end z-20 pointer-events-none">
+            <div className="w-full max-w-lg mx-auto px-6 min-h-[80px] flex flex-col items-center justify-end z-20 pointer-events-none">
                  {showSubtitles && currentSubtitle && connectionState === 'connected' && (
                      <div className="bg-black/60 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/10 text-center animate-in fade-in slide-in-from-bottom-2 shadow-2xl w-full max-w-full overflow-hidden flex flex-col justify-end" style={{ maxHeight: '140px' }}>
                          <div

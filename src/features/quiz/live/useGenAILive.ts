@@ -240,6 +240,9 @@ export function useGenAILive({ quiz }: UseGenAILiveOptions) {
 
                   workletNodeRef.current.port.onmessage = (event) => {
                     if (!isConnectedRef.current) return;
+                    if (audioContextRef.current && audioContextRef.current.state === "suspended") {
+                        audioContextRef.current.resume().catch(e => console.warn("Could not resume context:", e));
+                    }
 
                     const inputData = event.data;
                     const pcm16 = floatTo16BitPCM(inputData);
@@ -275,6 +278,9 @@ export function useGenAILive({ quiz }: UseGenAILiveOptions) {
               },
               onmessage: async (message: LiveServerMessage) => {
                 if (!isConnectedRef.current) return;
+                    if (audioContextRef.current && audioContextRef.current.state === "suspended") {
+                        audioContextRef.current.resume().catch(e => console.warn("Could not resume context:", e));
+                    }
 
                 // Extract Subtitles
                 const parts = message.serverContent?.modelTurn?.parts;
@@ -294,6 +300,10 @@ export function useGenAILive({ quiz }: UseGenAILiveOptions) {
                 }
 
                 if (message.serverContent?.turnComplete) {
+                    setAgentState("listening");
+                    if (audioContextRef.current && audioContextRef.current.state === "suspended") {
+                        audioContextRef.current.resume().catch(e => console.warn("Could not resume context:", e));
+                    }
                     setCurrentSubtitle(current => {
                         if (current) {
                             setTranscript(t => [...t, { role: 'model', text: current, timestamp: Date.now() }]);
