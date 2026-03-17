@@ -9,6 +9,10 @@ import { useAIChat } from './useAIChat';
 import { MODEL_CONFIGS } from './useQuota';
 import { cn } from '../../../utils/cn';
 import { AIChatConversation } from '../../../lib/db';
+import { useLiveAPI } from '../talk/useLiveAPI';
+import { VoiceBlobVisualizer } from '../talk/VoiceBlobVisualizer';
+import { Mic, MicOff, PhoneOff, Captions, AlertCircle, User } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 
 export const AIChatPage: React.FC = () => {
     const navigate = useNavigate();
@@ -26,13 +30,98 @@ export const AIChatPage: React.FC = () => {
         setIncludeAppData,
         activeModel,
         setActiveModel,
-        quota
+        quota,
+        appendTranscript
     } = useAIChat();
 
     const [inputValue, setInputValue] = useState('');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [isLiveTalkActive, setIsLiveTalkActive] = useState(false);
+    const [showSubtitles, setShowSubtitles] = useState(true);
+
+    const {
+        connectionState,
+        agentState,
+        errorMsg,
+        isMuted,
+        toggleMute,
+        connect,
+        disconnect,
+        voiceName,
+        changeVoice,
+        topic,
+        userAnalyser,
+        aiAnalyser,
+        currentSubtitle,
+        transcript
+    } = useLiveAPI();
+
+    // Polyfill secondsElapsed for now (or remove if not needed)
+    const [secondsElapsed, setSecondsElapsed] = useState(0);
+    useEffect(() => {
+        if (connectionState === 'connected') {
+            const timer = setInterval(() => setSecondsElapsed(prev => prev + 1), 1000);
+            return () => clearInterval(timer);
+        } else {
+            setSecondsElapsed(0);
+        }
+    }, [connectionState]);
+
+    const handleToggleConnection = () => {
+        if (connectionState === 'connected') {
+            disconnect();
+        } else {
+            const initialContext = messages.slice(-10).map(m => ({
+                role: m.role as 'user' | 'model',
+                text: m.content
+            }));
+            connect(initialContext);
+        }
+    };
+
+    const formatTime = (seconds: number) => {
+        const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+        const s = (seconds % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+    };
+
+    const isActiveSpeaking = agentState === 'speaking' || agentState === 'listening';
+
+    const getStatusText = () => {
+        if (connectionState === 'connecting') return 'Connecting to MindFlow...';
+        if (connectionState === 'connected') {
+             if (isMuted) return 'Microphone muted';
+             if (agentState === 'speaking') return 'MindFlow is speaking...';
+             if (agentState === 'listening') return 'Listening...';
+             return 'Connected';
+        }
+        if (connectionState === 'error') return 'Connection failed';
+        return 'Ready to talk';
+    };
+
+    const handleStartLiveTalk = () => {
+        setIsLiveTalkActive(true);
+        const initialContext = messages.slice(-10).map(m => ({
+            role: m.role as 'user' | 'model',
+            text: m.content
+        }));
+        connect(initialContext);
+    };
+
+    const handleEndLiveTalk = async () => {
+        if (connectionState === 'connected') {
+            handleToggleConnection(); // Disconnect
+        }
+        setIsLiveTalkActive(false);
+
+        if (transcript && transcript.length > 0) {
+            // Wait for disconnect tasks then append
+            await appendTranscript(transcript);
+        }
+    };
+
 
     const quickStarters = [
         "Explain quantum computing in simple terms.",
@@ -360,11 +449,173 @@ export const AIChatPage: React.FC = () => {
                         onSubmit={handleSubmit}
                         isLoading={isLoading}
                         onStopGenerating={stopGenerating}
+                        onStartLiveTalk={handleStartLiveTalk}
                         activeModel={activeModel}
                         setActiveModel={setActiveModel}
                     />
                 </div>
                 </div>
+
+
+
+            {/* Live Talk Overlay */}
+            <AnimatePresence>
+                {isLiveTalkActive && (
+                    <motion.div
+                        initial={{ y: "100%" }}
+                        animate={{ y: 0 }}
+                        exit={{ y: "100%" }}
+                        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                        className="absolute inset-0 z-[55] flex flex-col bg-stone-900 overflow-hidden"
+                    >
+                        <header className="flex h-14 items-center gap-2 border-b border-stone-800 bg-stone-900/80 px-2 sm:px-4 backdrop-blur-sm shrink-0">
+                            <button
+                                onClick={handleEndLiveTalk}
+                                className="rounded-full p-2 text-stone-400 hover:bg-stone-800 hover:text-white transition-colors shrink-0"
+                                aria-label="Go back to chat"
+                            >
+                                <ArrowLeft className="h-5 w-5" />
+                            </button>
+                            <span className="font-semibold text-white">Live Talk</span>
+                        </header>
+
+                        <div className="flex-1 flex flex-col items-center justify-center relative w-full h-full">
+                            {/* Top Status Indicator */}
+                            <div className="absolute top-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 z-10 w-full max-w-md px-4">
+                                {connectionState === 'connected' ? (
+                                    <div className="flex items-center gap-2 bg-stone-800/80 backdrop-blur-md border border-stone-700 px-4 py-2 rounded-full shadow-lg">
+                                        <span className={cn(
+                                            "w-2 h-2 rounded-full animate-pulse",
+                                            isMuted ? "bg-red-500" : "bg-emerald-500"
+                                        )} />
+                                        <span className="text-sm font-medium text-white tracking-widest font-mono">LIVE | {formatTime(secondsElapsed)}</span>
+                                    </div>
+                                ) : connectionState === 'error' ? (
+                                    <div className="flex items-center gap-2 text-red-400 bg-red-950/50 border border-red-900/50 px-4 py-2 rounded-full backdrop-blur-md text-sm font-medium text-center shadow-lg">
+                                        <AlertCircle className="w-5 h-5 shrink-0" />
+                                        <span>{errorMsg || 'Connection failed'}</span>
+                                    </div>
+                                ) : null}
+
+                                <div className={cn(
+                                    "text-lg font-medium transition-colors duration-300 h-8 mt-2",
+                                    connectionState === 'connected' ? (isActiveSpeaking ? "text-indigo-400 animate-pulse" : (isMuted ? "text-red-400" : "text-emerald-400")) : "text-stone-500"
+                                )}>
+                                    {getStatusText()}
+                                </div>
+                            </div>
+
+                            {/* Main Visualizer Avatar Area */}
+                            <div className="flex-1 flex flex-col items-center justify-center w-full max-w-md relative z-10">
+                                <div className="relative flex items-center justify-center w-64 h-64">
+                                    <VoiceBlobVisualizer
+                                        userAnalyser={userAnalyser}
+                                        aiAnalyser={aiAnalyser}
+                                        agentState={agentState}
+                                        connectionState={connectionState}
+                                        isMuted={isMuted}
+                                    />
+                                    <button
+                                        onClick={connectionState !== 'connected' ? handleToggleConnection : undefined}
+                                        disabled={connectionState === 'connecting'}
+                                        className={cn(
+                                            "relative z-20 w-32 h-32 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 transform border-4 border-stone-800/80 backdrop-blur-sm",
+                                            connectionState === 'idle' || connectionState === 'disconnected' || connectionState === 'error'
+                                                ? "bg-stone-800 hover:bg-stone-700 hover:scale-105 cursor-pointer text-stone-300"
+                                                : connectionState === 'connecting'
+                                                ? "bg-stone-800 scale-95 cursor-wait"
+                                                : isActiveSpeaking
+                                                ? "bg-indigo-600/20 text-indigo-100 scale-100 cursor-default border-indigo-500/30"
+                                                : isMuted ? "bg-red-600/20 text-red-100 border-red-500/30" : "bg-emerald-600/20 text-emerald-100 border-emerald-500/30"
+                                        )}
+                                    >
+                                        {connectionState === 'connecting' ? (
+                                            <Loader2 className="w-12 h-12 animate-spin text-stone-400" />
+                                        ) : connectionState === 'connected' ? (
+                                            isActiveSpeaking ? (
+                                                <User className="w-12 h-12 opacity-90" />
+                                            ) : (
+                                                <Mic className="w-12 h-12 opacity-90" />
+                                            )
+                                        ) : (
+                                            <Mic className="w-12 h-12" />
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Subtitles Overlay */}
+                            <div className="w-full max-w-lg px-6 min-h-[80px] mb-8 flex flex-col items-center justify-end z-20 pointer-events-none">
+                                 {showSubtitles && currentSubtitle && connectionState === 'connected' && (
+                                     <div className="bg-black/60 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/10 text-center animate-in fade-in slide-in-from-bottom-2 shadow-2xl w-full max-w-full overflow-hidden flex flex-col justify-end" style={{ maxHeight: '100px' }}>
+                                         <div
+                                             className="overflow-y-auto pointer-events-auto scrollbar-hide flex flex-col justify-end"
+                                             ref={(el) => { if (el) el.scrollTop = el.scrollHeight; }}
+                                         >
+                                             <p className="text-white text-lg font-medium leading-relaxed drop-shadow-md pb-1 whitespace-pre-wrap">
+                                                 {currentSubtitle}
+                                             </p>
+                                         </div>
+                                     </div>
+                                 )}
+                            </div>
+
+                            {/* Bottom Controls */}
+                            <div className="w-full max-w-md pb-8 z-20 flex flex-col items-center gap-6">
+                                 {connectionState === 'connected' ? (
+                                    <div className="flex items-center justify-center gap-6 w-full px-4 animate-in fade-in slide-in-from-bottom-4">
+                                        <button
+                                            onClick={() => setShowSubtitles(!showSubtitles)}
+                                            className={cn(
+                                                "p-4 rounded-full transition-all duration-200 shadow-lg",
+                                                showSubtitles
+                                                    ? 'bg-stone-800 text-indigo-400 border border-indigo-900/50 hover:bg-stone-700'
+                                                    : 'bg-stone-800 text-stone-500 border border-stone-700 hover:bg-stone-700 hover:text-stone-300'
+                                            )}
+                                            title={showSubtitles ? "Hide Subtitles" : "Show Subtitles"}
+                                        >
+                                            <Captions className="w-6 h-6" />
+                                        </button>
+                                        <button
+                                            onClick={handleToggleConnection}
+                                            className="p-6 bg-red-600 hover:bg-red-500 text-white rounded-full shadow-lg hover:shadow-red-900/50 transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center border-4 border-stone-900"
+                                            title="End Conversation"
+                                        >
+                                            <PhoneOff className="w-8 h-8" />
+                                        </button>
+                                        <button
+                                            onClick={toggleMute}
+                                            className={cn(
+                                                "p-4 rounded-full transition-all duration-200 shadow-lg border",
+                                                isMuted
+                                                    ? 'bg-red-950/50 text-red-400 border-red-900/50 hover:bg-red-900/50'
+                                                    : 'bg-stone-800 text-emerald-400 border-emerald-900/30 hover:bg-stone-700 hover:text-emerald-300'
+                                            )}
+                                            title={isMuted ? "Unmute Microphone" : "Mute Microphone"}
+                                        >
+                                            {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+                                        </button>
+                                    </div>
+                                 ) : (
+                                    <>
+                                        <button
+                                            onClick={handleToggleConnection}
+                                            className="bg-emerald-600 text-white font-bold text-lg px-8 py-4 rounded-full shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] transition-all hover:-translate-y-1 active:translate-y-0 w-full max-w-[280px]"
+                                        >
+                                            Start Connection
+                                        </button>
+                                        {connectionState !== 'error' && (
+                                            <p className="text-center text-sm text-stone-500 max-w-[250px] font-medium mt-2 animate-pulse">
+                                                Microphone test is active. Speak to test levels.
+                                            </p>
+                                        )}
+                                    </>
+                                 )}
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Settings Right Sidebar */}
             <div className={cn(
