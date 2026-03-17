@@ -40,6 +40,7 @@ export const AIChatPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [isLiveTalkActive, setIsLiveTalkActive] = useState(false);
     const [showSubtitles, setShowSubtitles] = useState(true);
+    const [isVoiceMenuOpen, setIsVoiceMenuOpen] = useState(false);
 
     const {
         connectionState,
@@ -468,15 +469,58 @@ export const AIChatPage: React.FC = () => {
                         transition={{ type: "spring", damping: 25, stiffness: 200 }}
                         className="absolute inset-0 z-[55] flex flex-col bg-stone-900 overflow-hidden"
                     >
-                        <header className="flex h-14 items-center gap-2 border-b border-stone-800 bg-stone-900/80 px-2 sm:px-4 backdrop-blur-sm shrink-0">
-                            <button
-                                onClick={handleEndLiveTalk}
-                                className="rounded-full p-2 text-stone-400 hover:bg-stone-800 hover:text-white transition-colors shrink-0"
-                                aria-label="Go back to chat"
-                            >
-                                <ArrowLeft className="h-5 w-5" />
-                            </button>
-                            <span className="font-semibold text-white">Live Talk</span>
+                        <header className="flex h-14 items-center justify-between border-b border-stone-800 bg-stone-900/80 px-2 sm:px-4 backdrop-blur-sm shrink-0 relative">
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={handleEndLiveTalk}
+                                    className="rounded-full p-2 text-stone-400 hover:bg-stone-800 hover:text-white transition-colors shrink-0"
+                                    aria-label="Go back to chat"
+                                >
+                                    <ArrowLeft className="h-5 w-5" />
+                                </button>
+                                <span className="font-semibold text-white">Live Talk</span>
+                            </div>
+
+                            <div className="relative">
+                                <button
+                                    onClick={() => setIsVoiceMenuOpen(!isVoiceMenuOpen)}
+                                    className="rounded-full p-2 text-stone-400 hover:bg-stone-800 hover:text-white transition-colors shrink-0"
+                                    aria-label="Voice settings"
+                                >
+                                    <Settings className="h-5 w-5" />
+                                </button>
+
+                                <AnimatePresence>
+                                    {isVoiceMenuOpen && (
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                            exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                            className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-stone-700 bg-stone-800 p-2 shadow-2xl z-50"
+                                        >
+                                            <div className="px-2 pb-2 text-xs font-semibold text-stone-400 uppercase tracking-wider">Voice Identity</div>
+                                            <div className="flex flex-col gap-1">
+                                                {['Aoede', 'Puck', 'Fenrir', 'Kore', 'Charon'].map((v: any) => (
+                                                    <button
+                                                        key={v}
+                                                        onClick={() => {
+                                                            changeVoice(v);
+                                                            setIsVoiceMenuOpen(false);
+                                                        }}
+                                                        className={cn(
+                                                            "flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors",
+                                                            voiceName === v ? "bg-stone-700 text-white font-medium" : "text-stone-300 hover:bg-stone-700/50"
+                                                        )}
+                                                    >
+                                                        {v}
+                                                        {voiceName === v && <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
                         </header>
 
                         <div className="flex-1 flex flex-col items-center justify-center relative w-full h-full">
