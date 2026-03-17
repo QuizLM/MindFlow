@@ -184,8 +184,8 @@ export const useAIChat = () => {
         }
     };
 
-    const sendMessage = useCallback(async (content: string, imageBase64?: string) => {
-        if (!content.trim() && !imageBase64) return;
+    const sendMessage = useCallback(async (content: string, imageBase64?: string, audioData?: { data: string, mimeType: string }) => {
+        if (!content.trim() && !imageBase64 && !audioData) return;
 
         const quotaCheck = quota.checkCanRequest();
         if (!quotaCheck.allowed) {
@@ -297,6 +297,14 @@ export const useAIChat = () => {
                     inlineData: {
                         mimeType,
                         data: base64Data
+                    }
+                });
+            }
+            if (audioData) {
+                userParts.push({
+                    inlineData: {
+                        mimeType: audioData.mimeType,
+                        data: audioData.data
                     }
                 });
             }
