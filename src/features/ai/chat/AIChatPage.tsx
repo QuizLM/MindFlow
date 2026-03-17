@@ -184,9 +184,9 @@ export const AIChatPage: React.FC = () => {
         }
     };
 
-    const handleSubmit = (image?: string) => {
-        if ((!inputValue.trim() && !image) || isLoading) return;
-        sendMessage(inputValue, image);
+    const handleSubmit = (image?: string, audio?: { data: string, mimeType: string }) => {
+        if ((!inputValue.trim() && !image && !audio) || isLoading) return;
+        sendMessage(inputValue, image, audio);
         setInputValue('');
     };
 

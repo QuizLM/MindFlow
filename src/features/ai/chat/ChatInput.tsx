@@ -1,7 +1,6 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Send, Loader2, Mic, Image as ImageIcon, X, StopCircle, ChevronUp } from 'lucide-react';
 import { MODEL_CONFIGS } from './useQuota';
-import { useState } from 'react';
 import { cn } from '../../../utils/cn';
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -10,7 +9,7 @@ interface ChatInputProps {
     setActiveModel?: (modelId: any) => void;
     value: string;
     onChange: (val: string) => void;
-    onSubmit: (image?: string) => void;
+    onSubmit: (image?: string, audio?: { data: string, mimeType: string }) => void;
     isLoading: boolean;
     disabled?: boolean;
     onStopGenerating?: () => void;
@@ -30,41 +29,51 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     const [isListening, setIsListening] = useState(false);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [isModelSheetOpen, setIsModelSheetOpen] = useState(false);
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const audioChunksRef = useRef<Blob[]>([]);
 
-    const handleMicClick = () => {
-        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-            alert('Speech recognition is not supported in this browser.');
-            return;
-        }
-
-        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-        const recognition = new SpeechRecognition();
-
+    const handleMicClick = async () => {
         if (isListening) {
-            recognition.stop();
+            if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+                mediaRecorderRef.current.stop();
+            }
             setIsListening(false);
             return;
         }
 
-        recognition.continuous = false;
-        recognition.interimResults = true;
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const mediaRecorder = new MediaRecorder(stream);
+            mediaRecorderRef.current = mediaRecorder;
+            audioChunksRef.current = [];
 
-        recognition.onstart = () => setIsListening(true);
-        recognition.onresult = (event: any) => {
-            let finalTranscript = '';
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
-                if (event.results[i].isFinal) {
-                    finalTranscript += event.results[i][0].transcript;
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    audioChunksRef.current.push(event.data);
                 }
-            }
-            if (finalTranscript) {
-                onChange(value ? value + ' ' + finalTranscript : finalTranscript);
-            }
-        };
-        recognition.onerror = () => setIsListening(false);
-        recognition.onend = () => setIsListening(false);
+            };
 
-        recognition.start();
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+                const reader = new FileReader();
+                reader.readAsDataURL(audioBlob);
+                reader.onloadend = () => {
+                    const base64AudioMessage = reader.result as string;
+                    // Remove the data URL prefix to get raw base64
+                    const base64Data = base64AudioMessage.split(',')[1];
+                    onSubmit(undefined, { data: base64Data, mimeType: 'audio/webm' });
+                };
+                // Stop all audio tracks to turn off the microphone light
+                stream.getTracks().forEach(track => track.stop());
+            };
+
+            mediaRecorder.start();
+            setIsListening(true);
+        } catch (error) {
+            console.error("Error accessing microphone:", error);
+            alert("Could not access microphone. Please check your permissions.");
+            setIsListening(false);
+        }
     };
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,6 +139,19 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                 </div>
             )}
 
+            {isListening && (
+                <div className="flex items-center justify-center gap-1 mb-3 bg-red-50 dark:bg-red-900/20 py-2 px-4 rounded-full border border-red-200 dark:border-red-800/50 w-fit mx-auto animate-fade-in shadow-sm">
+                    <span className="text-red-500 font-medium text-sm mr-2 animate-pulse">Recording</span>
+                    <div className="flex gap-1 items-end h-4">
+                        <motion.div animate={{ height: ["40%", "100%", "40%"] }} transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }} className="w-1 bg-red-500 rounded-full" />
+                        <motion.div animate={{ height: ["20%", "80%", "20%"] }} transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut", delay: 0.2 }} className="w-1 bg-red-500 rounded-full" />
+                        <motion.div animate={{ height: ["60%", "100%", "60%"] }} transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut", delay: 0.4 }} className="w-1 bg-red-500 rounded-full" />
+                        <motion.div animate={{ height: ["30%", "70%", "30%"] }} transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut", delay: 0.1 }} className="w-1 bg-red-500 rounded-full" />
+                        <motion.div animate={{ height: ["50%", "90%", "50%"] }} transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut", delay: 0.3 }} className="w-1 bg-red-500 rounded-full" />
+                    </div>
+                </div>
+            )}
+
             <div className="relative flex w-full flex-col gap-1 rounded-[24px] bg-gray-100 dark:bg-slate-800/80 px-4 py-2 focus-within:ring-2 focus-within:ring-indigo-500/50">
                 <textarea
                     ref={textareaRef}
@@ -192,7 +214,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                                             ? "bg-red-50 text-red-500 dark:bg-red-900/20"
                                             : "bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
                             )}
-                            title={isLoading ? "Stop generating" : (value.trim() || imagePreview) ? "Send message" : "Dictate with voice"}
+                            title={isLoading ? "Stop generating" : (value.trim() || imagePreview) ? "Send message" : (isListening ? "Stop recording" : "Record voice")}
                         >
                             {isLoading ? (
                                 <StopCircle className="h-5 w-5" />
