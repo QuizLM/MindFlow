@@ -36,7 +36,7 @@ import { ScrollableCapsules } from './ui/ScrollableCapsules';
 
 // Optimization Hooks
 import { useQuestionIndex, filterQuestionsByIndex } from '../hooks/useQuestionIndex';
-import { useServerFilterCounts } from '../../../hooks/useServerFilterCounts';
+import { useOptimizedFilterCounts } from '../hooks/useOptimizedFilterCounts';
 
 interface QuizConfigProps {
   onStart: (questions: Question[], filters?: InitialFilters, mode?: QuizMode) => void;
@@ -66,6 +66,7 @@ export const QuizConfig: React.FC<QuizConfigProps> = ({ onStart, onBack }) => {
   const [isLoadingMetadata, setIsLoadingMetadata] = useState(true);
   const [isStartingQuiz, setIsStartingQuiz] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [showEmptyError, setShowEmptyError] = useState(false);
 
   // 0. Fetch Metadata on Mount
@@ -73,8 +74,11 @@ export const QuizConfig: React.FC<QuizConfigProps> = ({ onStart, onBack }) => {
     try {
       setIsLoadingMetadata(true);
       setError(null);
+      setProgress({ current: 0, total: 0 });
 
       const data = await fetchQuestionMetadata((current, total) => {
+        setProgress({ current, total });
+      });
 
       setMetadata(data);
 
@@ -105,16 +109,23 @@ export const QuizConfig: React.FC<QuizConfigProps> = ({ onStart, onBack }) => {
       const topicMap = map.get(subject)!;
       if (!topicMap.has(topic)) topicMap.set(topic, new Set());
       if (subTopic) topicMap.get(topic)!.add(subTopic);
+    });
     return map;
   }, [metadata]);
 
   // 3. Hooks Integration for Filter Logic
   const { availableTopics, availableSubTopics } = useDependentFilters({
+    selectedFilters: filters,
     setSelectedFilters: setFilters,
     classificationMap
+  });
 
   // Calculate dynamic counts using Set operations
-  const { counts: filterCounts } = useServerFilterCounts(filters); // Replaced useOptimizedFilterCounts
+  const filterCounts = useOptimizedFilterCounts({
+    allQuestions: metadata,
+    selectedFilters: filters,
+    index: questionIndex
+  });
 
   // 4. Derived Lists for Dropdown Options
   const allSubjects = useMemo(() => Array.from(classificationMap.keys()).sort(), [classificationMap]);
@@ -227,6 +238,7 @@ export const QuizConfig: React.FC<QuizConfigProps> = ({ onStart, onBack }) => {
         ...prev,
         [key]: isSelected ? current.filter(i => i !== option) : [...current, option]
       };
+    });
   }, []);
 
   // --- Loading State Render ---
