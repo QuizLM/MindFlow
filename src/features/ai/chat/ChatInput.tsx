@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Send, Loader2, Mic, Image as ImageIcon, X, StopCircle, ChevronUp } from 'lucide-react';
+import { Send, Loader2, Mic, Image as ImageIcon, X, StopCircle, ChevronUp, AudioWaveform } from 'lucide-react';
 import { MODEL_CONFIGS } from './useQuota';
 import { cn } from '../../../utils/cn';
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,6 +13,7 @@ interface ChatInputProps {
     isLoading: boolean;
     disabled?: boolean;
     onStopGenerating?: () => void;
+    onStartLiveTalk?: () => void;
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({
@@ -23,7 +24,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     onSubmit,
     isLoading,
     disabled,
-    onStopGenerating
+    onStopGenerating,
+    onStartLiveTalk
 }) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [isListening, setIsListening] = useState(false);
@@ -189,6 +191,18 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                             >
                                 <span className="truncate max-w-[60px]">{MODEL_CONFIGS[activeModel as keyof typeof MODEL_CONFIGS]?.displayName || 'Model'}</span>
                                 <ChevronUp className="h-3 w-3" />
+                            </button>
+                        )}
+
+                        {/* Live Talk Button */}
+                        {!value.trim() && !imagePreview && !isLoading && !isListening && onStartLiveTalk && (
+                            <button
+                                onClick={onStartLiveTalk}
+                                disabled={disabled}
+                                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-all duration-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
+                                title="Live Talk"
+                            >
+                                <AudioWaveform className="h-5 w-5" />
                             </button>
                         )}
 

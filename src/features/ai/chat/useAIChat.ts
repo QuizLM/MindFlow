@@ -125,6 +125,55 @@ export const useAIChat = () => {
         setMessages([]);
     };
 
+    const appendTranscript = async (transcriptItems: { role: 'user' | 'model', text: string }[]) => {
+        if (!transcriptItems.length) return;
+
+        let activeConvId = currentConversationId;
+        const now = new Date().toISOString();
+        let isNewConv = false;
+
+        // Ensure we have a conversation to append to
+        if (!activeConvId) {
+            activeConvId = uuidv4();
+            isNewConv = true;
+            const newConv: AIChatConversation = {
+                id: activeConvId,
+                title: "Live Talk Session",
+                created_at: now,
+                updated_at: now
+            };
+            await saveChatConversation(newConv);
+            setCurrentConversationId(activeConvId);
+            setConversations(prev => [newConv, ...prev]);
+        } else {
+            const existingConv = conversations.find(c => c.id === activeConvId);
+            if (existingConv) {
+                const updatedConv = { ...existingConv, updated_at: now };
+                await saveChatConversation(updatedConv);
+                setConversations(prev => prev.map(c => c.id === activeConvId ? updatedConv : c).sort((a,b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()));
+            }
+        }
+
+        const newMessages: AIChatMessage[] = [];
+        for (const item of transcriptItems) {
+            if (!item.text.trim()) continue;
+
+            const msg: AIChatMessage = {
+                id: uuidv4(),
+                conversation_id: activeConvId,
+                role: item.role === 'model' ? 'assistant' : 'user',
+                content: item.text,
+                created_at: new Date().toISOString()
+            };
+            newMessages.push(msg);
+            await saveChatMessage(msg);
+        }
+
+        if (newMessages.length > 0) {
+            setMessages(prev => [...prev, ...newMessages]);
+        }
+    };
+
     const stopGenerating = () => {
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
@@ -419,6 +468,7 @@ export const useAIChat = () => {
         setIncludeAppData,
         activeModel,
         setActiveModel,
-        quota
+        quota,
+        appendTranscript
     };
 };

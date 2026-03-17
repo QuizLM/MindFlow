@@ -160,7 +160,7 @@ export function useLiveAPI() {
         }
     }, []);
 
-    const connect = useCallback(async () => {
+    const connect = useCallback(async (initialContext?: { text: string; role: 'user' | 'model' }[]) => {
         const apiKey = (process as any).env.API_KEY || (process as any).env.GEMINI_API_KEY || (import.meta as any).env.VITE_GEMINI_API_KEY;
 
         if (!apiKey) {
@@ -186,9 +186,14 @@ export function useLiveAPI() {
 
           const ai = new GoogleGenAI({ apiKey: apiKey });
 
-          const systemInstruction = `You are MindFlow AI, a helpful, conversational English tutor.
+          let systemInstruction = `You are MindFlow AI, a helpful, conversational English tutor.
           Current Topic: ${topic}.
           Respond concisely and energetically. Keep answers to 1-2 sentences max. Speak naturally. Adapt your vocabulary to the topic selected.`;
+
+          if (initialContext && initialContext.length > 0) {
+              const formattedContext = initialContext.map(m => `${m.role.toUpperCase()}: ${m.text}`).join('\n');
+              systemInstruction += `\n\nHere is the recent text chat history for context before this live call started:\n${formattedContext}\n\nPlease continue the conversation from here seamlessly.`;
+          }
 
           const sessionPromise = ai.live.connect({
             model: 'gemini-2.5-flash-native-audio-preview-09-2025',
