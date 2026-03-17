@@ -52,7 +52,6 @@ export const AIChatPage: React.FC = () => {
         disconnect,
         voiceName,
         changeVoice,
-        topic,
         userAnalyser,
         aiAnalyser,
         currentSubtitle,
