@@ -11,6 +11,8 @@ import InstallPwaModal from '../../../components/common/InstallPwaModal';
 import { User } from '@supabase/supabase-js';
 import founderImage from '../../../assets/aalok.jpg';
 import { CinematicIntro } from './Landing/CinematicIntro';
+import { useMediaQuery } from '../../../hooks/useMediaQuery';
+import { MobileOnboardingSlider } from './Onboarding/MobileOnboardingSlider';
 
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -44,6 +46,36 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLoginC
   const [showMainContent, setShowMainContent] = useState(false);
 
   // Handlers
+
+  const isMobile = useMediaQuery('(max-width: 767px)');
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    const hasCompletedOnboarding = localStorage.getItem('mindflow_onboarding_completed');
+    if (isMobile && !hasCompletedOnboarding) {
+      setShowOnboarding(true);
+    } else if (isMobile && hasCompletedOnboarding) {
+      // If mobile and already completed, skip landing page entirely
+      // We don't want to redirect immediately here as intro might be playing,
+      // but we will do it after intro completes.
+    }
+  }, [isMobile]);
+
+  useEffect(() => {
+    if (showMainContent && isMobile) {
+      const hasCompletedOnboarding = localStorage.getItem('mindflow_onboarding_completed');
+      if (hasCompletedOnboarding) {
+          onGetStarted();
+      }
+    }
+  }, [showMainContent, isMobile, onGetStarted]);
+
+  const handleOnboardingComplete = () => {
+    localStorage.setItem('mindflow_onboarding_completed', 'true');
+    setShowOnboarding(false);
+    onGetStarted();
+  };
+
   const handleInstallClick = () => {
     setIsModalOpen(true);
   };
@@ -76,6 +108,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLoginC
 
       {/* Main Content Layer - mount/render when intro allows it */}
       {showMainContent && (
+        <>
+          {showOnboarding && isMobile ? (
+            <MobileOnboardingSlider
+              onComplete={handleOnboardingComplete}
+              showInstallButton={shouldShowInstallButton}
+              onInstallClick={handleInstallClick}
+            />
+          ) : (
+
         <div className="relative min-h-screen flex flex-col items-center justify-start pb-0 overflow-x-hidden bg-slate-50 dark:bg-slate-800/50 selection:bg-indigo-100 selection:text-indigo-900 font-sans pt-[env(safe-area-inset-top)]">
       
       {/* --- 0. Noise Texture Overlay (Visual Polish) --- */}
@@ -478,11 +519,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLoginC
           from { opacity: 0; transform: translateY(20px) translateX(-50%); }
           to { opacity: 1; transform: translateY(0) translateX(-50%); }
         }
+
         .animate-fade-in-up {
             animation: fade-in-up 0.5s ease-out forwards;
         }
       `}</style>
       </div>
+          )}
+        </>
       )}
     </>
   );
