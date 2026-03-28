@@ -28,6 +28,8 @@ const LiveQuizRoom = lazy(() => import('../features/quiz/live/LiveQuizRoom').the
 const SynonymsConfig = lazy(() => import('../features/synonyms/SynonymsConfig').then(m => ({ default: m.SynonymsConfig })));
 const SynonymFlashcardSession = lazy(() => import('../features/synonyms/components/SynonymFlashcardSession').then(m => ({ default: m.SynonymFlashcardSession })));
 const SynonymClusterList = lazy(() => import('../features/synonyms/components/SynonymClusterList').then(m => ({ default: m.SynonymClusterList })));
+const AdminNotifications = lazy(() => import('../features/notifications/admin/AdminNotifications').then(m => ({ default: m.AdminNotifications })));
+
 const SynonymQuizSession = lazy(() => import('../features/synonyms/components/SynonymQuizSession').then(m => ({ default: m.SynonymQuizSession })));
 const SynonymPhase1Session = lazy(() => import('../features/synonyms/components/SynonymPhase1Session').then(m => ({ default: m.SynonymPhase1Session })));
 
@@ -361,7 +363,12 @@ const AppRoutesContent: React.FC = () => {
 
                 {/* Fallback Route */}
                 <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
+              <Route path="/admin/notifications" element={
+            <Suspense fallback={<div className="flex h-screen items-center justify-center"><SynapticLoader size="md" /></div>}>
+              <AdminNotifications />
+            </Suspense>
+          } />
+        (</Routes>)
         </Suspense>
     );
 };

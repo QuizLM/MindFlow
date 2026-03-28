@@ -4,6 +4,7 @@ import { X, Volume2, Moon, Smartphone, Sparkles } from 'lucide-react';
 import { useSettingsStore } from '../../../../stores/useSettingsStore';
 import { SettingsToggle } from './SettingsToggle';
 import { ClaymorphismSwitch } from './ClaymorphismSwitch';
+import { NotificationSettings } from '../../../notifications/components/NotificationSettings';
 
 import { InstallPWA } from './InstallPWA';
 
