@@ -245,3 +245,97 @@ export const AboutSVG = () => (
     <motion.rect x="46" y="45" width="8" height="25" rx="4" fill="white" animate={{ y: [45, 43, 45] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }} />
   </svg>
 );
+
+// --- English Zone SVGs ---
+
+// 1. Vocab Quiz (Emerald)
+export const VocabQuizSVG = () => (
+  <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg">
+    <defs>
+      <linearGradient id="vocabGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#34D399" />
+        <stop offset="100%" stopColor="#059669" />
+      </linearGradient>
+    </defs>
+    {/* Floating Book Pages */}
+    {[
+      { y: 30, w: 40, h: 50, d: 0, rx: 4, fill: "#A7F3D0", op: 0.5, rz: [-5, -8, -5] },
+      { y: 35, w: 40, h: 50, d: 0.2, rx: 4, fill: "#6EE7B7", op: 0.8, rz: [5, 8, 5] },
+    ].map((page, i) => (
+      <motion.rect
+        key={i} x="30" y={page.y} width={page.w} height={page.h} rx={page.rx} fill={page.fill} opacity={page.op}
+        animate={{ y: [page.y, page.y - 3, page.y], rotateZ: page.rz }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: page.d }}
+      />
+    ))}
+    {/* Foreground Book Cover */}
+    <motion.g animate={{ y: [40, 35, 40] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}>
+      <rect x="30" y="40" width="40" height="50" rx="4" fill="url(#vocabGrad)" />
+      {/* 'A' Text pulsing */}
+      <motion.text x="40" y="70" fill="white" fontSize="24" fontWeight="bold" animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>A</motion.text>
+    </motion.g>
+  </svg>
+);
+
+// 2. Grammar Quiz (Violet)
+export const GrammarQuizSVG = () => (
+  <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg">
+    <defs>
+      <linearGradient id="grammarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#A78BFA" />
+        <stop offset="100%" stopColor="#7C3AED" />
+      </linearGradient>
+    </defs>
+    {/* Drawing path */}
+    <motion.path
+      d="M20 70 Q 40 40 60 60 T 80 30"
+      fill="none" stroke="#DDD6FE" strokeWidth="4" strokeLinecap="round"
+      initial={{ pathLength: 0 }}
+      animate={{ pathLength: 1 }}
+      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", repeatType: "reverse" }}
+    />
+    {/* Floating Pen */}
+    <motion.g animate={{ x: [-5, 5, -5], y: [5, -5, 5], rotateZ: [-10, 10, -10] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}>
+      <path d="M70 20 L80 30 L40 70 L30 60 Z" fill="url(#grammarGrad)" />
+      <path d="M30 60 L20 70 L40 70 Z" fill="#C4B5FD" />
+      <circle cx="23" cy="68" r="2" fill="#4C1D95" />
+    </motion.g>
+  </svg>
+);
+
+// 3. English Mock (Rose)
+export const EnglishMockSVG = () => (
+  <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg">
+    <defs>
+      <linearGradient id="mockGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#FB7185" />
+        <stop offset="100%" stopColor="#E11D48" />
+      </linearGradient>
+    </defs>
+    {/* Floating Target / Test Paper */}
+    <motion.rect x="25" y="25" width="50" height="60" rx="4" fill="#FECDD3" opacity="0.6" animate={{ y: [25, 20, 25] }} transition={{ duration: 3, repeat: Infinity }} />
+    <motion.rect x="30" y="30" width="50" height="60" rx="4" fill="url(#mockGrad)" animate={{ y: [30, 25, 30] }} transition={{ duration: 3, repeat: Infinity, delay: 0.2 }} />
+
+    {/* Checklist items */}
+    {[
+      { y: 45, w: 25, d: 0.4 },
+      { y: 60, w: 15, d: 0.6 },
+      { y: 75, w: 20, d: 0.8 },
+    ].map((line, i) => (
+      <motion.g key={i} animate={{ y: [line.y, line.y - 5, line.y] }} transition={{ duration: 3, repeat: Infinity, delay: 0.2 }}>
+        <rect x="50" y={0} width={line.w} height="4" rx="2" fill="white" />
+        <circle cx="40" cy="2" r="3" fill="#FFE4E6" />
+        {/* Animated Checkmarks inside circles */}
+        <motion.path
+          d="M38 2 L40 4 L43 0"
+          fill="none" stroke="#BE185D" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 1.5, delay: line.d }}
+        />
+      </motion.g>
+    ))}
+    {/* A+ Grade Stamp */}
+    <motion.text x="55" y="55" fill="#FFE4E6" fontSize="20" fontWeight="bold" opacity="0.4" animate={{ scale: [1, 1.2, 1], rotate: [-10, 10, -10] }} transition={{ duration: 4, repeat: Infinity }}>A+</motion.text>
+  </svg>
+);
