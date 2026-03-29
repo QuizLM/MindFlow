@@ -1,6 +1,8 @@
 import React from 'react';
-import { ArrowLeft, BookA, PenTool, FileText, ChevronRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '../../../components/Button/Button';
+import { VocabQuizSVG, GrammarQuizSVG, EnglishMockSVG } from './DashboardSVGs';
 
 interface EnglishQuizHomeProps {
   onBack: () => void;
@@ -19,90 +21,172 @@ interface EnglishQuizHomeProps {
  * @returns {JSX.Element} The rendered English Zone home screen.
  */
 export const EnglishQuizHome: React.FC<EnglishQuizHomeProps> = ({ onBack, onVocabClick }) => {
-  return (
-    <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-      <div className="flex-1 flex flex-col items-center justify-center space-y-10 py-10 relative z-10">
-        
-        {/* Navigation Bar */}
-        <div className="w-full max-w-6xl mx-auto px-4">
-           <Button 
-              variant="ghost" 
-              onClick={onBack} 
-              className="text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 flex items-center gap-2 transition-colors"
-           >
-             <ArrowLeft className="w-4 h-4" /> Back to Dashboard
-           </Button>
-        </div>
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    };
 
-        {/* Hero Header */}
-        <div className="text-center max-w-4xl mx-auto px-4">
-          <h1 className="text-4xl sm:text-6xl font-extrabold text-gray-900 dark:text-white leading-tight mb-6 transition-colors">
-            English <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-500">Proficiency</span>
-          </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto transition-colors">
-            Master vocabulary, grammar, and comprehension with targeted quizzes designed for competitive exams.
-          </p>
-        </div>
+    const itemVariants = {
+        hidden: { y: 20, opacity: 0 },
+        visible: {
+            y: 0,
+            opacity: 1,
+            transition: { type: 'spring' as const, stiffness: 300, damping: 24 }
+        }
+    };
 
-        {/* Feature Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-6xl mx-auto px-4">
+    return (
+        <div className="flex flex-col min-h-[calc(100vh-4rem)] transition-colors duration-700 relative overflow-hidden">
+            <div className="flex-1 flex flex-col space-y-6 py-4 relative z-10 animate-fade-in w-full">
 
-          {/* Card 1: Vocab Quiz */}
-          <div 
-            onClick={onVocabClick}
-            className="bg-emerald-50 dark:bg-emerald-950/30 p-6 rounded-2xl cursor-pointer group relative z-20 transition-all duration-200 shadow-sm active:translate-y-1 active:border-b flex items-center justify-between border border-emerald-100 dark:border-emerald-900/40 border-b-4 border-b-emerald-200 dark:border-b-emerald-700 hover:border-emerald-300 dark:hover:border-emerald-500"
-          >
-            <div className="flex items-center gap-4 flex-1">
-                <div className="w-12 h-12 bg-white dark:bg-gray-800 ring-1 ring-black/5 dark:ring-white/10 rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform flex-shrink-0">
-                    <BookA className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                {/* Navigation Bar */}
+                <div className="w-full max-w-7xl mx-auto px-4 mt-2">
+                   <Button
+                      variant="ghost"
+                      onClick={onBack}
+                      className="text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 flex items-center gap-2 transition-colors -ml-4"
+                   >
+                     <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+                   </Button>
                 </div>
-                <div className="flex-1 pr-2">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Vocab Quiz</h3>
-                    <p className="text-gray-600 dark:text-gray-400 text-xs font-medium">
-                        Idioms, One-word substitutions, Synonyms, and Antonyms.
-                    </p>
+
+                {/* Hero Header */}
+                <div className="relative text-left w-full max-w-7xl mx-auto px-4">
+                  <h1 className="text-3xl sm:text-5xl font-black text-gray-900 dark:text-white leading-tight mb-1 drop-shadow-sm">
+                    English <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-500">Proficiency</span>
+                  </h1>
+                  <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 mb-2 leading-relaxed font-medium">
+                    Master vocabulary, grammar, and comprehension with targeted quizzes designed for competitive exams.
+                  </p>
                 </div>
+
+                {/* Cards Grid */}
+                <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 w-full max-w-7xl mx-auto z-20 px-4">
+
+                    {/* Card 1: Vocab Quiz */}
+                    <motion.div
+                        variants={itemVariants}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={onVocabClick}
+                        className="relative group cursor-pointer aspect-square rounded-[32px] sm:rounded-[40px] p-[1px] overflow-hidden"
+                    >
+                        {/* Glow Background Layer */}
+                        <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-2xl transition-colors duration-300 z-0"></div>
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/60 to-white/10 dark:from-white/10 dark:to-transparent z-0"></div>
+
+                        {/* Interactive Inner Shadow / Border */}
+                        <div className="absolute inset-0 rounded-[32px] sm:rounded-[40px] border border-white/60 dark:border-white/10 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] z-10 transition-all duration-300 group-active:border-b-0 border-b-[4px] border-b-emerald-200/50 dark:border-b-emerald-700/50 group-hover:border-emerald-300 dark:group-hover:border-emerald-500"></div>
+
+                        {/* Centered Subtle Glow */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full rounded-full blur-[60px] opacity-40 group-hover:opacity-60 transition-opacity duration-500 z-0 bg-emerald-500"></div>
+
+                        <div className="relative z-20 flex flex-col items-center justify-between h-full w-full p-4 sm:p-6 transition-opacity duration-300">
+                            {/* SVG Container */}
+                            <motion.div
+                                className="w-16 h-16 sm:w-24 sm:h-24 md:w-28 md:h-28 mt-2 relative drop-shadow-xl"
+                                initial={{ scale: 0.9, opacity: 0.8 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                            >
+                                <VocabQuizSVG />
+                            </motion.div>
+
+                            {/* Text Area */}
+                            <div className="flex flex-col items-center justify-end w-full text-center pb-2">
+                                <h3 className="text-sm sm:text-lg font-black leading-tight bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-emerald-900 dark:from-emerald-300 dark:to-emerald-100 mb-1 sm:mb-2">Vocab Quiz</h3>
+                                <p className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-semibold leading-tight line-clamp-2 max-w-[90%]">
+                                    Idioms, One-word substitutions, Synonyms, and Antonyms.
+                                </p>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* Card 2: Grammar Quiz */}
+                    <motion.div
+                        variants={itemVariants}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={undefined}
+                        className="relative group cursor-pointer aspect-square rounded-[32px] sm:rounded-[40px] p-[1px] overflow-hidden"
+                    >
+                        {/* Glow Background Layer */}
+                        <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-2xl transition-colors duration-300 z-0"></div>
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/60 to-white/10 dark:from-white/10 dark:to-transparent z-0"></div>
+
+                        {/* Interactive Inner Shadow / Border */}
+                        <div className="absolute inset-0 rounded-[32px] sm:rounded-[40px] border border-white/60 dark:border-white/10 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] z-10 transition-all duration-300 group-active:border-b-0 border-b-[4px] border-b-violet-200/50 dark:border-b-violet-700/50 group-hover:border-violet-300 dark:group-hover:border-violet-500"></div>
+
+                        {/* Centered Subtle Glow */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full rounded-full blur-[60px] opacity-40 group-hover:opacity-60 transition-opacity duration-500 z-0 bg-violet-500"></div>
+
+                        <div className="relative z-20 flex flex-col items-center justify-between h-full w-full p-4 sm:p-6 transition-opacity duration-300">
+                            {/* SVG Container */}
+                            <motion.div
+                                className="w-16 h-16 sm:w-24 sm:h-24 md:w-28 md:h-28 mt-2 relative drop-shadow-xl"
+                                initial={{ scale: 0.9, opacity: 0.8 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                            >
+                                <GrammarQuizSVG />
+                            </motion.div>
+
+                            {/* Text Area */}
+                            <div className="flex flex-col items-center justify-end w-full text-center pb-2">
+                                <h3 className="text-sm sm:text-lg font-black leading-tight bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-violet-900 dark:from-violet-300 dark:to-violet-100 mb-1 sm:mb-2">Grammar Quiz</h3>
+                                <p className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-semibold leading-tight line-clamp-2 max-w-[90%]">
+                                    Test your grammar skills with error detection and sentence improvement.
+                                </p>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* Card 3: Mock Test */}
+                    <motion.div
+                        variants={itemVariants}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={undefined}
+                        className="relative group cursor-pointer aspect-square rounded-[32px] sm:rounded-[40px] p-[1px] overflow-hidden"
+                    >
+                        {/* Glow Background Layer */}
+                        <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-2xl transition-colors duration-300 z-0"></div>
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/60 to-white/10 dark:from-white/10 dark:to-transparent z-0"></div>
+
+                        {/* Interactive Inner Shadow / Border */}
+                        <div className="absolute inset-0 rounded-[32px] sm:rounded-[40px] border border-white/60 dark:border-white/10 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] z-10 transition-all duration-300 group-active:border-b-0 border-b-[4px] border-b-rose-200/50 dark:border-b-rose-700/50 group-hover:border-rose-300 dark:group-hover:border-rose-500"></div>
+
+                        {/* Centered Subtle Glow */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full rounded-full blur-[60px] opacity-40 group-hover:opacity-60 transition-opacity duration-500 z-0 bg-rose-500"></div>
+
+                        <div className="relative z-20 flex flex-col items-center justify-between h-full w-full p-4 sm:p-6 transition-opacity duration-300">
+                            {/* SVG Container */}
+                            <motion.div
+                                className="w-16 h-16 sm:w-24 sm:h-24 md:w-28 md:h-28 mt-2 relative drop-shadow-xl"
+                                initial={{ scale: 0.9, opacity: 0.8 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                            >
+                                <EnglishMockSVG />
+                            </motion.div>
+
+                            {/* Text Area */}
+                            <div className="flex flex-col items-center justify-end w-full text-center pb-2">
+                                <h3 className="text-sm sm:text-lg font-black leading-tight bg-clip-text text-transparent bg-gradient-to-r from-rose-600 to-rose-900 dark:from-rose-300 dark:to-rose-100 mb-1 sm:mb-2">English Mock</h3>
+                                <p className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-semibold leading-tight line-clamp-2 max-w-[90%]">
+                                    Full length mock test with 25-30 questions. (Coming Soon)
+                                </p>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                </motion.div>
             </div>
-            <ChevronRight className="w-5 h-5 text-emerald-400 dark:text-emerald-500 flex-shrink-0 group-hover:translate-x-1 transition-transform" />
-          </div>
-          {/* Card 2: Grammar Quiz */}
-          <div
-            onClick={undefined}
-            className="bg-violet-50 dark:bg-violet-950/30 p-6 rounded-2xl cursor-pointer group relative z-20 transition-all duration-200 shadow-sm active:translate-y-1 active:border-b flex items-center justify-between border border-violet-100 dark:border-violet-900/40 border-b-4 border-b-violet-200 dark:border-b-violet-700 hover:border-violet-300 dark:hover:border-violet-500"
-          >
-            <div className="flex items-center gap-4 flex-1">
-                <div className="w-12 h-12 bg-white dark:bg-gray-800 ring-1 ring-black/5 dark:ring-white/10 rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform flex-shrink-0">
-                    <PenTool className="w-6 h-6 text-violet-600 dark:text-violet-400" />
-                </div>
-                <div className="flex-1 pr-2">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Grammar Quiz</h3>
-                    <p className="text-gray-600 dark:text-gray-400 text-xs font-medium">
-                        Test your grammar skills with error detection and sentence improvement.
-                    </p>
-                </div>
-            </div>
-            <ChevronRight className="w-5 h-5 text-violet-400 dark:text-violet-500 flex-shrink-0 group-hover:translate-x-1 transition-transform" />
-          </div>
-          {/* Card 3: Mock Test */}
-          <div
-            onClick={undefined}
-            className="bg-rose-50 dark:bg-rose-950/30 p-6 rounded-2xl cursor-pointer group relative z-20 transition-all duration-200 shadow-sm active:translate-y-1 active:border-b flex items-center justify-between border border-rose-100 dark:border-rose-900/40 border-b-4 border-b-rose-200 dark:border-b-rose-700 hover:border-rose-300 dark:hover:border-rose-500"
-          >
-            <div className="flex items-center gap-4 flex-1">
-                <div className="w-12 h-12 bg-white dark:bg-gray-800 ring-1 ring-black/5 dark:ring-white/10 rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform flex-shrink-0">
-                    <FileText className="w-6 h-6 text-rose-600 dark:text-rose-400" />
-                </div>
-                <div className="flex-1 pr-2">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">English Mock</h3>
-                    <p className="text-gray-600 dark:text-gray-400 text-xs font-medium">
-                        Full length mock test with 25-30 questions. (Coming Soon)
-                    </p>
-                </div>
-            </div>
-            <ChevronRight className="w-5 h-5 text-rose-400 dark:text-rose-500 flex-shrink-0 group-hover:translate-x-1 transition-transform" />
-          </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 };
