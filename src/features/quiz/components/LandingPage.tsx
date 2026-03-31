@@ -12,6 +12,7 @@ import { User } from '@supabase/supabase-js';
 import founderImage from '../../../assets/aalok.jpg';
 import { CinematicIntro } from './Landing/CinematicIntro';
 import { MobileOnboarding } from './Landing/MobileOnboarding';
+import { WelcomeIntro } from './Landing/WelcomeIntro';
 
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -44,6 +45,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLoginC
   const [isFounderImageOpen, setIsFounderImageOpen] = useState(false);
   const [showMainContent, setShowMainContent] = useState(false);
   const [showMobileOnboarding, setShowMobileOnboarding] = useState(false);
+  const [showWelcomeIntro, setShowWelcomeIntro] = useState(false);
 
   const handleReveal = React.useCallback(() => {
     setShowMainContent(true);
@@ -86,7 +88,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLoginC
   const handleOnboardingComplete = () => {
     localStorage.setItem('mindflow_onboarding_seen', 'true');
     setShowMobileOnboarding(false);
-    onGetStarted(); // Redirect straight to dashboard
+    // Instead of immediately going to Dashboard, trigger the Welcome Intro
+    setShowWelcomeIntro(true);
   };
 
   return (
@@ -97,6 +100,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onLoginC
       {/* Main Content Layer - mount/render when intro allows it */}
       {showMainContent && (
         <>
+
+          {showWelcomeIntro && (
+            <WelcomeIntro onComplete={() => {
+              setShowWelcomeIntro(false);
+              onGetStarted();
+            }} />
+          )}
           {showMobileOnboarding ? (
             <MobileOnboarding
               onComplete={handleOnboardingComplete}
