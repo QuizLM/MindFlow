@@ -34,7 +34,7 @@ export function useDependentFilters({ selectedFilters, setSelectedFilters, class
         classificationMap.get(subject)?.forEach((_, topic) => newTopics.add(topic));
       });
     }
-    setAvailableTopics(Array.from(newTopics).sort());
+    setAvailableTopics(Array.from(newTopics).filter(Boolean).sort());
 
     // Reset dependent fields if not initial mount to avoid invalid selections
     if (!isInitialMount.current) {
@@ -59,7 +59,7 @@ export function useDependentFilters({ selectedFilters, setSelectedFilters, class
         }
       });
     }
-    setAvailableSubTopics(Array.from(newSubTopics).sort());
+    setAvailableSubTopics(Array.from(newSubTopics).filter(Boolean).sort());
 
     if (isInitialMount.current) {
       isInitialMount.current = false;

@@ -74,7 +74,7 @@ export const fetchQuestionMetadata = async (
 
   // Select ONLY columns needed for filtering logic.
   // Minimizes bandwidth usage.
-  const columnsToSelect = 'v1_id, subject, topic, subTopic, examName, examYear, examDateShift, difficulty, questionType, tags';
+  const columnsToSelect = 'id, v1_id, subject, topic, subTopic, examName, examYear, examDateShift, difficulty, questionType, tags';
 
   try {
     while (hasMore) {
@@ -103,7 +103,7 @@ export const fetchQuestionMetadata = async (
   // Map the raw DB rows to the internal Question model structure.
   // Note: Content fields like 'question' and 'options' are left empty/default.
   return allRows.map((row) => ({
-    id: row.v1_id!, 
+    id: row.id!,
     sourceInfo: {
       examName: row.examName || '',
       examYear: row.examYear || 0,
@@ -144,7 +144,7 @@ export const fetchQuestionsByIds = async (ids: string[]): Promise<Question[]> =>
   const { data, error } = await supabase
     .from('questions')
     .select('*')
-    .in('v1_id', ids);
+    .in('id', ids);
 
   if (error) {
     console.error("Error fetching full questions:", error);
@@ -153,7 +153,7 @@ export const fetchQuestionsByIds = async (ids: string[]): Promise<Question[]> =>
 
   // Map the DB rows to the full Question model
   return (data as QuestionDBRow[]).map((row) => ({
-    id: row.v1_id, 
+    id: row.id,
     sourceInfo: {
       examName: row.examName,
       examYear: row.examYear,
