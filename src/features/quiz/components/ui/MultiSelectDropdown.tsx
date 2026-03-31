@@ -173,7 +173,7 @@ export const MultiSelectDropdown = React.memo(function MultiSelectDropdown({
   return (
     <div className={cn("relative", isOpen && "z-50")} ref={dropdownRef}>
       {label && (
-        <div className="flex items-center gap-1.5 mb-1.5">
+        <div className="flex items-center gap-1.5 mb-1.5 w-full">
           <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{label}</label>
           {tooltip && (
             <div className="group relative flex items-center">
@@ -182,6 +182,34 @@ export const MultiSelectDropdown = React.memo(function MultiSelectDropdown({
                 {tooltip}
                 <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800" />
               </div>
+            </div>
+          )}
+          {options.length > 0 && (
+            <div className="ml-auto flex items-center gap-1.5">
+              <input
+                type="checkbox"
+                id={`select-all-${label?.replace(/\s+/g, '-')}`}
+                className="w-3.5 h-3.5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 cursor-pointer"
+                checked={
+                  options.length > 0 &&
+                  options.filter(opt => (counts?.[opt] || 0) > 0).length > 0 &&
+                  options.filter(opt => (counts?.[opt] || 0) > 0).every(opt => selectedOptions.includes(opt))
+                }
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    const availableOptions = options.filter(opt => (counts?.[opt] || 0) > 0);
+                    onSelectionChange(availableOptions);
+                  } else {
+                    onSelectionChange([]);
+                  }
+                }}
+              />
+              <label
+                htmlFor={`select-all-${label?.replace(/\s+/g, '-')}`}
+                className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-indigo-500 transition-colors"
+              >
+                All
+              </label>
             </div>
           )}
         </div>
