@@ -139,20 +139,36 @@ export const fetchQuestionMetadata = async (
 export const fetchQuestionsByIds = async (ids: string[]): Promise<Question[]> => {
   if (ids.length === 0) return [];
 
-  // Use the .in() filter to fetch specific records.
-  // Note: URL length limits may apply for extremely large sets, but typical quiz sizes are safe.
-  const { data, error } = await supabase
-    .from('questions')
-    .select('*')
-    .in('id', ids);
+  // Batch the requests to avoid URL length limits and improve performance for large sets
+  const BATCH_SIZE = 200;
+  const batches = [];
+  for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+    batches.push(ids.slice(i, i + BATCH_SIZE));
+  }
 
-  if (error) {
+  let allData = [];
+
+  try {
+    const results = await Promise.all(
+      batches.map(async (batchIds) => {
+        const { data, error } = await supabase
+          .from('questions')
+          .select('*')
+          .in('id', batchIds);
+
+        if (error) throw error;
+        return data;
+      })
+    );
+
+    allData = results.flat();
+  } catch (error) {
     console.error("Error fetching full questions:", error);
     throw error;
   }
 
   // Map the DB rows to the full Question model
-  return (data as QuestionDBRow[]).map((row) => ({
+  return (allData as QuestionDBRow[]).map((row) => ({
     id: row.id,
     sourceInfo: {
       examName: row.examName,
