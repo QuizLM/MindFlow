@@ -27,7 +27,7 @@ export function useQuestionIndex(questions: Question[]) {
             }
             index[key][v].add(question.id);
           });
-        } else if (value) {
+        } else if (value !== undefined && value !== null) {
           const strValue = String(value); // Ensure it's a string (e.g. year)
           if (!index[key][strValue]) {
             index[key][strValue] = new Set();
