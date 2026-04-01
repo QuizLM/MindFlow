@@ -107,7 +107,7 @@ const AppRoutesContent: React.FC = () => {
                         <Dashboard
                             onStartQuiz={() => { enterConfig(); navTo('/quiz/config'); }}
                             onEnglish={() => { enterEnglishHome(); navTo('/english'); }}
-                            onBackToIntro={() => { goToIntro(); navTo('/'); }}
+                            onBackToIntro={() => { navTo('/dashboard'); }}
                             onSavedQuizzes={() => navTo('/quiz/saved')}
                         />
                     } />
@@ -185,7 +185,7 @@ const AppRoutesContent: React.FC = () => {
                     <Route path="/profile" element={
                         <ProfilePage
                             onNavigateToSettings={() => navTo('/settings')}
-                            onSignOut={() => { goToIntro(); navTo('/'); }}
+                            onSignOut={() => { navTo('/dashboard'); }}
                         />
                     } />
 
@@ -202,7 +202,7 @@ const AppRoutesContent: React.FC = () => {
                     } />
 
                     <Route path="/login" element={
-                        <AuthPage onBack={() => { goToIntro(); navTo('/'); }} />
+                        <AuthPage onBack={() => { navTo('/dashboard'); }} />
                     } />
 
                     <Route path="/result" element={
