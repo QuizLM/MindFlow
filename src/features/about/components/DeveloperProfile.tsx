@@ -31,7 +31,7 @@ export const DeveloperProfile: React.FC = () => {
             name: 'Aalok Kumar Sharma',
             color: 'purple',
             SVG: OwnerSVG,
-            image: '/images/owner-profile.png'
+            image: './images/owner-profile.png'
         },
         {
             id: 'ceo',
@@ -39,7 +39,7 @@ export const DeveloperProfile: React.FC = () => {
             name: 'Manish Mishra',
             color: 'blue',
             SVG: CEOSVG,
-            image: '/images/ceo-profile.png'
+            image: './images/ceo-profile.png'
         },
         {
             id: 'backend',
@@ -47,7 +47,7 @@ export const DeveloperProfile: React.FC = () => {
             name: 'Ashu Mishra',
             color: 'cyan',
             SVG: BackendSVG,
-            image: '/images/backend-profile.png'
+            image: './images/backend-profile.png'
         },
         {
             id: 'marketing',
@@ -55,7 +55,7 @@ export const DeveloperProfile: React.FC = () => {
             name: 'Dheeraj Kumar Sharma',
             color: 'rose',
             SVG: MarketingSVG,
-            image: '/images/marketing-profile.png'
+            image: './images/marketing-profile.png'
         }
     ];
 
