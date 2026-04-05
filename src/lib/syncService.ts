@@ -11,6 +11,9 @@ import { useSyncStore } from '../features/quiz/stores/useSyncStore';
 let isSyncing = false;
 
 export const syncService = {
+  /** Returns the current sync status */
+  getIsSyncing: () => isSyncing,
+
   pushAIChatConversation: async (userId: string, conv: AIChatConversation) => {
     const { error } = await supabase.from('ai_chat_conversations').upsert({
       id: conv.id,
@@ -222,6 +225,7 @@ export const syncService = {
   syncOnLogin: async (userId: string, isSignup: boolean = false) => {
     if (isSyncing) return;
     isSyncing = true;
+    window.dispatchEvent(new Event('mindflow-sync-start'));
 
     await syncService.processEventQueue(userId);
 

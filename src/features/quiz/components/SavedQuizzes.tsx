@@ -4,6 +4,7 @@ import { Trash2, Play, Clock, BookOpen, Edit2, Check, X, Save, Home, PlusCircle,
 import { db } from '../../../lib/db';
 import { SavedQuiz } from '../types';
 import { useQuizContext } from '../context/QuizContext';
+import { syncService } from '../../../lib/syncService';
 import { SynapticLoader } from '../../../components/ui/SynapticLoader';
 import { motion } from 'framer-motion';
 
@@ -24,19 +25,32 @@ export const SavedQuizzes: React.FC = () => {
     const { loadSavedQuiz } = useQuizContext();
     const [quizzes, setQuizzes] = useState<SavedQuiz[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isSyncing, setIsSyncing] = useState(syncService.getIsSyncing());
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editName, setEditName] = useState('');
 
     useEffect(() => {
         loadQuizzes();
 
-        // Listen for sync completion to refresh data and avoid stale cache
+        const handleSyncStart = () => {
+            setIsSyncing(true);
+        };
+
         const handleSyncComplete = () => {
+            setIsSyncing(false);
             loadQuizzes();
         };
+
+        window.addEventListener('mindflow-sync-start', handleSyncStart);
         window.addEventListener('mindflow-sync-complete', handleSyncComplete);
 
+        // Also check if sync started right before component mounted
+        if (syncService.getIsSyncing()) {
+            setIsSyncing(true);
+        }
+
         return () => {
+            window.removeEventListener('mindflow-sync-start', handleSyncStart);
             window.removeEventListener('mindflow-sync-complete', handleSyncComplete);
         };
     }, []);
@@ -122,7 +136,7 @@ export const SavedQuizzes: React.FC = () => {
         return quiz.state.currentQuestionIndex > 0 || Object.keys(quiz.state.answers).length > 0;
     };
 
-    if (loading) {
+    if (loading || isSyncing) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-slate-900">
                 <SynapticLoader size="lg" />
