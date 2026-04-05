@@ -13,7 +13,6 @@ export type QuizStatus =
   | 'flashcards-complete'// Idiom Flashcard Summary
   | 'result'             // Quiz Result Summary
   | 'english-home'       // English Subject Home
-  | 'vocab-home'         // Vocabulary Home
   | 'idioms-config'      // Idioms Configuration
   | 'ows-config'         // One Word Substitution Configuration
   | 'synonyms-config'    // Synonyms Configuration

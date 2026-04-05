@@ -173,7 +173,6 @@ export const useQuiz = () => {
     enterHome: state.enterHome,
     enterConfig: state.enterConfig,
     enterEnglishHome: state.enterEnglishHome,
-    enterVocabHome: state.enterVocabHome,
     enterIdiomsConfig: state.enterIdiomsConfig,
     enterOWSConfig: state.enterOWSConfig,
     enterSynonymsConfig: state.enterSynonymsConfig,
