@@ -72,9 +72,6 @@ export function quizReducer(state: QuizState, action: QuizAction): QuizState {
     case 'ENTER_ENGLISH_HOME':
       return { ...state, status: 'english-home' };
 
-    case 'ENTER_VOCAB_HOME':
-      return { ...state, status: 'vocab-home' };
-
     case 'ENTER_IDIOMS_CONFIG':
       return { ...state, status: 'idioms-config' };
 

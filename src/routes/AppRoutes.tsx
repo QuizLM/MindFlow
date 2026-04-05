@@ -11,7 +11,6 @@ import { SynapticLoader } from '../components/ui/SynapticLoader';
 const LandingPage = lazy(() => import('../features/quiz/components/LandingPage').then(m => ({ default: m.LandingPage })));
 const Dashboard = lazy(() => import('../features/quiz/components/Dashboard').then(m => ({ default: m.Dashboard })));
 const EnglishQuizHome = lazy(() => import('../features/quiz/components/EnglishQuizHome').then(m => ({ default: m.EnglishQuizHome })));
-const VocabQuizHome = lazy(() => import('../features/quiz/components/VocabQuizHome').then(m => ({ default: m.VocabQuizHome })));
 const QuizConfig = lazy(() => import('../features/quiz/components/QuizConfig').then(m => ({ default: m.QuizConfig })));
 const SavedQuizzes = lazy(() => import('../features/quiz/components/SavedQuizzes').then(m => ({ default: m.SavedQuizzes })));
 const AttemptedQuizzes = lazy(() => import('../features/quiz/components/AttemptedQuizzes').then(m => ({ default: m.AttemptedQuizzes })));
@@ -67,7 +66,7 @@ const AppRoutesContent: React.FC = () => {
     // Destructure all necessary state and actions from the global store
     const {
         state,
-        enterHome, enterConfig, enterEnglishHome, enterVocabHome, enterIdiomsConfig, enterOWSConfig,
+        enterHome, enterConfig, enterEnglishHome, enterIdiomsConfig, enterOWSConfig,
         enterSynonymsConfig,
 
         enterProfile, enterLogin, goToIntro, startQuiz,
@@ -140,16 +139,9 @@ const AppRoutesContent: React.FC = () => {
                     <Route path="/english" element={
                         <EnglishQuizHome
                             onBack={() => { enterHome(); navTo('/dashboard'); }}
-                            onVocabClick={() => { enterVocabHome(); navTo('/vocab'); }}
-                        />
-                    } />
-
-                    <Route path="/vocab" element={
-                        <VocabQuizHome
-                            onBack={() => { enterEnglishHome(); navTo('/english'); }}
                             onIdiomsClick={() => { enterIdiomsConfig(); navTo('/idioms/config'); }}
                             onOWSClick={() => { enterOWSConfig(); navTo('/ows/config'); }}
-                            onSynonymsClick={() => { enterSynonymsConfig(); navTo('/synonyms/config'); }}
+                            onSynonymsClick={() => navTo('/synonyms/config')}
                         />
                     } />
 
@@ -160,7 +152,7 @@ const AppRoutesContent: React.FC = () => {
 
                     <Route path="/idioms/config" element={
                         <IdiomsConfig
-                            onBack={() => { enterVocabHome(); navTo('/vocab'); }}
+                            onBack={() => { enterEnglishHome(); navTo('/english'); }}
                             onStart={(data, filters) => {
                                 flashcardStore.startIdioms(data as any, filters);
                                 navTo('/flashcards/session');
@@ -175,7 +167,7 @@ const AppRoutesContent: React.FC = () => {
 
                     <Route path="/synonyms/config" element={
                         <SynonymsConfig
-                            onBack={() => { enterVocabHome(); navTo('/vocab'); }}
+                            onBack={() => { enterEnglishHome(); navTo('/english'); }}
                             onStart={(data: any, filters: any) => {
                                 flashcardStore.startSynonyms(data, filters);
                                 navTo('/synonyms/session');
@@ -187,7 +179,7 @@ const AppRoutesContent: React.FC = () => {
 
                     <Route path="/ows/config" element={
                         <OWSConfig
-                            onBack={() => { enterVocabHome(); navTo('/vocab'); }}
+                            onBack={() => { enterEnglishHome(); navTo('/english'); }}
                             onStart={(data, filters) => {
                                 flashcardStore.startOWS(data, filters);
                                 navTo('/ows/session');
