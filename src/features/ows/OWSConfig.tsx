@@ -26,7 +26,8 @@ const emptyFilters: InitialFilters = {
     examYear: [],
     examDateShift: [],
     tags: [],
-    readStatus: []
+    readStatus: [],
+    deckMode: ['All Unseen']
 };
 
 export const OWSConfig: React.FC<OWSConfigProps> = ({ onStart, onBack }) => {
@@ -211,6 +212,20 @@ export const OWSConfig: React.FC<OWSConfigProps> = ({ onStart, onBack }) => {
                                 );
                             })}
                         </div>
+                    </div>
+
+
+                    {/* Deck Mode Card */}
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-teal-100 border-l-4 border-l-teal-400 shadow-sm relative">
+                        <div className="flex items-center gap-2 mb-4 text-teal-800 font-bold text-sm uppercase tracking-wider">
+                            <CheckCircle className="w-4 h-4" /> Deck Mode (Spatial Engine)
+                        </div>
+                        <SegmentedControl
+                            options={['All Unseen', 'Due for Review', 'Mix']}
+                            selectedOptions={filters.deckMode || ['All Unseen']}
+                            onOptionToggle={(opt) => setFilters(prev => ({ ...prev, deckMode: [opt] }))}
+                            counts={{}}
+                        />
                     </div>
 
                     {/* Read Status Card */}
