@@ -87,7 +87,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
       
       {/* --- Sticky Top Header --- */}
       {!isReviewMode && !isAIFullScreen && (
-      <header className="sticky top-0 z-40 w-full transition-all duration-300 relative group overflow-hidden">
+      <header className="sticky top-0 z-40 w-full transition-all duration-300 relative group overflow-visible">
         {/* Glow Background Layer */}
         <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-2xl transition-colors duration-300 z-0"></div>
         <div className="absolute inset-0 bg-gradient-to-br from-white/60 to-white/10 dark:from-white/10 dark:to-transparent z-0"></div>
