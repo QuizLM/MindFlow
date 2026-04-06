@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { cn } from '../../../../utils/cn';
 import { OneWord } from '../../../types/models';
 import { BookOpen, Lightbulb, RotateCw, Target, Tag, CheckCircle2, Circle } from 'lucide-react';
@@ -33,9 +34,10 @@ export const OWSCard: React.FC<OWSCardProps> = ({ data, serialNumber, isFlipped 
     <div className="relative w-full h-full perspective-1000 cursor-pointer group">
       <div
         className={cn(
-          "relative w-full h-full transition-transform duration-500 transform-style-3d shadow-xl rounded-3xl",
+          "relative w-full h-full transition-transform transform-style-3d shadow-xl rounded-3xl",
           isFlipped ? "rotate-y-180" : ""
         )}
+        style={{ transitionDuration: isFlipped ? "500ms" : "0ms" }}
       >
         {/* --- FRONT FACE --- */}
         <div className="absolute inset-0 w-full h-full backface-hidden rounded-3xl overflow-hidden bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col">
