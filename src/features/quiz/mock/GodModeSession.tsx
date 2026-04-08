@@ -41,9 +41,12 @@ export const GodModeSession: React.FC<GodModeSessionProps> = ({ questions, initi
         ? initialTime
         : questions.length * APP_CONFIG.TIMERS.MOCK_MODE_DEFAULT_PER_QUESTION;
 
-    const { timeLeft, formatTime } = useMockTimer({
+        const { timeLeft, formatTime } = useMockTimer({
         totalTime: totalExamTime,
-        onTimeUp: () => finishSession()
+        onTimeUp: () => finishSession(),
+        onTick: () => {
+            currentQTimer.current += 1;
+        }
     });
 
 
