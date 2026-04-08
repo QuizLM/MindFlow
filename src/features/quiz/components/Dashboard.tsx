@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { AdminSVG } from './AdminSVGs';
 import { McqsQuizSVG, EnglishZoneSVG, ToolsSVG, AnalyticsSVG, BookmarksSVG, AboutSVG, DownloadSVG } from './DashboardSVGs';
 import { ListChecks, FileText, BookOpen, Languages, Save, Wrench, BarChart2, Star, ChevronRight, Info } from 'lucide-react';
 import { Button } from '../../../components/Button/Button';
