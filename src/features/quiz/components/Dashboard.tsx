@@ -326,8 +326,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onBackToIntro }) => {
 
 
 
-                    {/* Admin Room (Visible only to mindflow@user.com) */}
-                    {user?.email === 'mindflow@user.com' && (
+                    {/* Admin Room (Visible only to admin@mindflow.com) */}
+                    {user?.email === 'admin@mindflow.com' && (
                     <motion.div
                         variants={itemVariants}
                         whileHover={{ scale: 1.02 }}
