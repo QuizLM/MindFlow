@@ -16,7 +16,7 @@ interface BlueprintBuilderProps {
   metadataIndex?: Record<string, Record<string, Set<string>>>;
 }
 
-const NodeItem = ({ node, updateNode, deleteNode, depth = 0, metadataIndex }: { node: BlueprintNode, updateNode: (n: BlueprintNode) => void, deleteNode: () => void, depth?: number, metadataIndex?: Record<string, Record<string, Set<string>>> }) => {
+const NodeItem = ({ node, updateNode, deleteNode, depth = 0, metadataIndex, parentValues = {} }: { node: BlueprintNode, updateNode: (n: BlueprintNode) => void, deleteNode: () => void, depth?: number, metadataIndex?: Record<string, Record<string, Set<string>>>, parentValues?: Record<string, string> }) => {
   const [expanded, setExpanded] = useState(true);
 
   const handleAddChild = () => {
@@ -53,9 +53,46 @@ const NodeItem = ({ node, updateNode, deleteNode, depth = 0, metadataIndex }: { 
 
   const availableOptions = useMemo(() => {
     if (!metadataIndex || !metadataIndex[node.type]) return [];
-    const options = Object.keys(metadataIndex[node.type]).sort();
-    return options.filter(o => o.trim().length > 0);
-  }, [metadataIndex, node.type]);
+
+    // Cascading logic
+    // We want to find the valid IDs based on parent values
+    let validIds: Set<string> | null = null;
+
+    for (const [parentKey, parentVal] of Object.entries(parentValues)) {
+      if (!parentVal) continue;
+      const ids = metadataIndex[parentKey]?.[parentVal];
+      if (!ids) continue;
+
+      if (validIds === null) {
+        validIds = new Set(ids);
+      } else {
+        const intersected = new Set<string>();
+        validIds.forEach(id => {
+          if (ids.has(id)) {
+            intersected.add(id);
+          }
+        });
+        validIds = intersected;
+      }
+
+      if (validIds.size === 0) break;
+    }
+
+    const options = Object.entries(metadataIndex[node.type])
+      .filter(([val, ids]) => {
+         if (val.trim().length === 0) return false;
+         if (validIds === null) return true; // No parent constraints
+         // Intersect
+         for (const id of ids) {
+           if (validIds.has(id)) return true;
+         }
+         return false;
+      })
+      .map(([val]) => val)
+      .sort();
+
+    return options;
+  }, [metadataIndex, node.type, parentValues]);
 
   return (
     <div className={`mt-2 border border-white/10 rounded-lg overflow-hidden bg-white/5 ${depth > 0 ? 'ml-6' : ''}`}>
@@ -144,6 +181,8 @@ const NodeItem = ({ node, updateNode, deleteNode, depth = 0, metadataIndex }: { 
                 updateNode={(n) => updateChild(child.id, n)}
                 deleteNode={() => deleteChild(child.id)}
                 depth={depth + 1}
+                metadataIndex={metadataIndex}
+                parentValues={{ ...parentValues, [node.type]: node.value }}
               />
           ))}
         </div>
@@ -152,7 +191,7 @@ const NodeItem = ({ node, updateNode, deleteNode, depth = 0, metadataIndex }: { 
   );
 };
 
-export const BlueprintBuilder: React.FC<BlueprintBuilderProps> = ({ initialData, onSave, onCancel, onLaunch }) => {
+export const BlueprintBuilder: React.FC<BlueprintBuilderProps> = ({ initialData, onSave, onCancel, onLaunch, metadataIndex }) => {
   const [name, setName] = useState(initialData?.name || '');
   const [totalQuestions, setTotalQuestions] = useState(initialData?.totalQuestions || 100);
   const [nodes, setNodes] = useState<BlueprintNode[]>(initialData?.nodes || []);
@@ -251,6 +290,7 @@ export const BlueprintBuilder: React.FC<BlueprintBuilderProps> = ({ initialData,
                     node={node}
                     updateNode={(n) => updateRootNode(node.id, n)}
                     deleteNode={() => deleteRootNode(node.id)}
+                    metadataIndex={metadataIndex}
                   />
                 ))}
                </div>

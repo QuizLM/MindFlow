@@ -12,9 +12,10 @@ import { CookingLoader } from './CookingLoader';
 interface ExamBlueprintsHubProps {
   onBack: () => void;
   onLaunchBlueprint: (blueprint: ExamBlueprint) => void;
+  metadataIndex?: Record<string, Record<string, Set<string>>>;
 }
 
-export const ExamBlueprintsHub: React.FC<ExamBlueprintsHubProps> = ({ onBack, onLaunchBlueprint }) => {
+export const ExamBlueprintsHub: React.FC<ExamBlueprintsHubProps> = ({ onBack, onLaunchBlueprint, metadataIndex }) => {
   const { user } = useAuth();
   const { showToast } = useNotification();
   const [blueprints, setBlueprints] = useState<ExamBlueprint[]>([]);
@@ -129,6 +130,7 @@ export const ExamBlueprintsHub: React.FC<ExamBlueprintsHubProps> = ({ onBack, on
         onSave={handleSave}
         onCancel={() => { setIsBuilding(false); setEditingBlueprint(null); }}
         onLaunch={onLaunchBlueprint}
+        metadataIndex={metadataIndex}
       />
     );
   }

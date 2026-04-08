@@ -354,7 +354,7 @@ export const QuizConfig: React.FC<QuizConfigProps> = ({ onStart, onBack }) => {
 
         {mode === 'god' && (
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <ExamBlueprintsHub onBack={onBack} onLaunchBlueprint={(bp) => navigate(`/blueprints/preview/${bp.id}`)} />
+            <ExamBlueprintsHub onBack={onBack} onLaunchBlueprint={(bp) => navigate(`/blueprints/preview/${bp.id}`)} metadataIndex={questionIndex} />
           </div>
         )}
 
