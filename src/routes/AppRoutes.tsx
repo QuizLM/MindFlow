@@ -31,6 +31,8 @@ const SynonymQuizSession = lazy(() => import('../features/synonyms/components/Sy
 const SynonymPhase1Session = lazy(() => import('../features/synonyms/components/SynonymPhase1Session').then(m => ({ default: m.SynonymPhase1Session })));
 
 const QuizResult = lazy(() => import('../features/quiz/components/QuizResult').then(m => ({ default: m.QuizResult })));
+const MockQuizResult = lazy(() => import('../features/quiz/components/MockQuizResult').then(m => ({ default: m.MockQuizResult })));
+const GodQuizResult = lazy(() => import('../features/quiz/components/GodQuizResult').then(m => ({ default: m.GodQuizResult })));
 const FlashcardSummary = lazy(() => import('../features/flashcards/components/FlashcardSummary').then(m => ({ default: m.FlashcardSummary })));
 const AboutUs = lazy(() => import('../features/about/components/AboutUs').then(m => ({ default: m.AboutUs })));
 const DeveloperProfile = lazy(() => import('../features/about/components/DeveloperProfile').then(m => ({ default: m.DeveloperProfile })));
@@ -210,16 +212,40 @@ const AppRoutesContent: React.FC = () => {
                     } />
 
                     <Route path="/result" element={
-                        <QuizResult
-                            score={state.score}
-                            total={state.activeQuestions.length}
-                            questions={state.activeQuestions}
-                            answers={state.answers}
-                            timeTaken={state.timeTaken}
-                            bookmarks={state.bookmarks}
-                            onRestart={() => { restartQuiz(); navTo('/quiz/config'); }}
-                            onGoHome={navHome}
-                        />
+                        state.mode === 'mock' ? (
+                            <MockQuizResult
+                                score={state.score}
+                                total={state.activeQuestions.length}
+                                questions={state.activeQuestions}
+                                answers={state.answers}
+                                timeTaken={state.timeTaken}
+                                bookmarks={state.bookmarks}
+                                onRestart={() => { restartQuiz(); navTo('/quiz/config'); }}
+                                onGoHome={navHome}
+                            />
+                        ) : state.mode === 'god' ? (
+                            <GodQuizResult
+                                score={state.score}
+                                total={state.activeQuestions.length}
+                                questions={state.activeQuestions}
+                                answers={state.answers}
+                                timeTaken={state.timeTaken}
+                                bookmarks={state.bookmarks}
+                                onRestart={() => { restartQuiz(); navTo('/quiz/config'); }}
+                                onGoHome={navHome}
+                            />
+                        ) : (
+                            <QuizResult
+                                score={state.score}
+                                total={state.activeQuestions.length}
+                                questions={state.activeQuestions}
+                                answers={state.answers}
+                                timeTaken={state.timeTaken}
+                                bookmarks={state.bookmarks}
+                                onRestart={() => { restartQuiz(); navTo('/quiz/config'); }}
+                                onGoHome={navHome}
+                            />
+                        )
                     } />
 
                     <Route path="/flashcards/summary" element={
