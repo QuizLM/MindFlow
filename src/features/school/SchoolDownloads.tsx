@@ -53,7 +53,7 @@ export const SchoolDownloads: React.FC = () => {
         m.subject === selectedSubject &&
         m.chapter === selectedChapter &&
         m.type === selectedType
-    );
+    ).sort((a, b) => a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' }));
 
     useEffect(() => {
         const fetchMaterials = async () => {
