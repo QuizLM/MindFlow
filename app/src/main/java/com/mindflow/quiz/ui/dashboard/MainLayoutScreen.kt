@@ -78,7 +78,10 @@ fun MainLayoutScreen(
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(BottomNavItem.Home.route) {
-                DashboardScreen()
+                DashboardScreen(
+                    onNavigateToQuiz = { rootNavController.navigate("quiz") },
+                    onNavigateToFlashcards = { rootNavController.navigate("flashcards") }
+                )
             }
             composable(BottomNavItem.Profile.route) {
                 // Placeholder Profile Screen
